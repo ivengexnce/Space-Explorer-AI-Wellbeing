@@ -1,15 +1,15 @@
 """
-MAITRI AI v6.0 — Complete Backend
-KEY FIXES & UPGRADES over v5:
-  - Voice loop NEVER dies spuriously (root cause: _voice_threads not in scope in watchdog)
-  - adjust_for_ambient_noise runs ONCE (was running every listen cycle — 400ms wasted)
-  - Conversation history passed to AI → real multi-turn memory
-  - Tips are ALWAYS spoken aloud (were generated but discarded)
-  - Warm check-in every VOICE_AUTO_SEC even when user is silent
-  - get_warmth_checkin() used for idle sessions (not a generic response)
-  - Breathing exercises spoken for high-stress emotions
-  - maitri_speaking_until calculated more accurately (word count / WPM)
-  - Alert system now uses structured dict (severity + speak text)
+MAITRI AI v5.0 — Complete Backend
+Features:
+  - Continuous face + emotion detection (DeepFace)
+  - Real AI responses (Gemini / Groq / OpenAI / fallback)
+  - Maitri speaks on EVERY emotion change automatically
+  - Always-on mic: listens, speaks, loops back immediately
+  - Behavior + fatigue + focus detection
+  - WebSocket real-time streaming
+  - Session analytics, reports, heatmap data
+  - Alert system with cooldown
+  - Music recommendations per emotion
 """
 
 import sys, io, cv2, numpy as np, time, logging, threading, uuid
@@ -21,20 +21,18 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
-from Pys.report           import save_log
-from Pys.voice_output     import speak, is_speaking
-from Pys.vision_module    import detect_face_emotion
+from Pys.report          import save_log, build_report_data
+from Pys.voice_output    import speak, is_speaking
+from Pys.vision_module   import detect_face_emotion
 from Pys.fatigue_detector import detect_fatigue
 from Pys.behavior_detector import detect_behavior
-from Pys.ai_responder     import (get_response, get_greeting, get_warmth_checkin,
-                                   AI_PROVIDER, set_session_language,
-                                   detect_language_from_text, LANG_DISPLAY)
-from Pys.alert_system     import check_alert
-from Pys.audio_module     import record_audio, speech_to_text
+from Pys.ai_responder    import get_response, get_greeting, AI_PROVIDER, set_session_language, detect_language_from_text, LANG_DISPLAY
+from Pys.alert_system    import check_alert
+from Pys.audio_module    import record_audio, speech_to_text
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "maitri-v6"
+app.config["SECRET_KEY"] = "maitri-v5"
 CORS(app, resources={r"/*": {"origins": "*"}})
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading",
                     logger=False, engineio_logger=False)
@@ -52,75 +50,71 @@ logging.basicConfig(
 )
 for noisy in ("werkzeug", "engineio", "socketio"):
     logging.getLogger(noisy).setLevel(logging.WARNING)
-
+# Suppress OPTIONS preflight spam
 import logging as _log
 class _NoOptions(logging.Filter):
     def filter(self, record):
-        return "OPTIONS" not in record.getMessage()
+        return "OPTIONS" not in (record.getMessage())
 logging.getLogger("werkzeug").addFilter(_NoOptions())
 logger = logging.getLogger(__name__)
 
 # ── Tunable constants ─────────────────────────────────────────────────────────
 WINDOW_SIZE        = 10    # emotion smoothing window
-FACE_TIMEOUT       = 5     # seconds before "Not Attentive"
-VOICE_AUTO_SEC     = 18    # warmth check-in interval (seconds)
-ALERT_COOLDOWN     = 45    # seconds between same alert
+FACE_TIMEOUT       = 5     # seconds → "Not Attentive"
+VOICE_AUTO_SEC     = 15    # periodic auto-voice if no mood change
+ALERT_COOLDOWN     = 30    # seconds between same alert
 TREND_WINDOW       = 30    # frames for trend analytics
 FRAME_TIMEOUT      = 15    # seconds → session stale
 WATCHDOG_SEC       = 5     # watchdog sweep interval
-DETECT_TIMEOUT     = 8     # hard timeout on DeepFace
+DETECT_TIMEOUT     = 8     # hard timeout on DeepFace call
 MAX_ERRORS         = 10    # consecutive errors → degraded
-MIN_FRAME_BYTES    = 1000  # minimum valid JPEG
-TTS_WPM            = 145   # Maitri's speech rate (words per minute)
-TTS_HARDWARE_BUF   = 1.8   # extra seconds after runAndWait for hardware drain
+MIN_FRAME_BYTES    = 1000  # minimum valid JPEG size
 
 # ── Sessions ──────────────────────────────────────────────────────────────────
 sessions: dict[str, dict] = {}
 _ses_lock = threading.Lock()
 
-# ── Voice threads — module-level so watchdog can see them ─────────────────────
-_voice_threads: dict[str, threading.Thread] = {}
-
 
 def _new_session() -> dict:
     return {
-        "emotion_window":       deque(maxlen=WINDOW_SIZE),
-        "trend_log":            deque(maxlen=TREND_WINDOW),
-        "full_log":             [],
-        "conversation":         [],        # [{role, text, ts}] — full history
+        "emotion_window":    deque(maxlen=WINDOW_SIZE),
+        "trend_log":         deque(maxlen=TREND_WINDOW),
+        "full_log":          [],
+        "conversation":      [],        # [{role, text, ts}]
         # timing
-        "last_seen_time":       time.time(),
-        "last_frame_time":      time.time(),
-        "last_voice_time":      0,
-        "last_alert_time":      0,
+        "last_seen_time":    time.time(),
+        "last_frame_time":   time.time(),
+        "last_voice_time":   0,
+        "last_alert_time":   0,
         # counters
-        "frame_count":          0,
-        "alert_count":          0,
-        "error_count":          0,
-        "consec_errors":        0,
-        "mood_change_count":    0,
+        "frame_count":       0,
+        "alert_count":       0,
+        "error_count":       0,
+        "consec_errors":     0,
+        "mood_change_count": 0,
         # status
-        "started_at":           datetime.utcnow().isoformat(),
-        "status":               "active",
+        "started_at":        datetime.utcnow().isoformat(),
+        "status":            "active",
         # voice state
-        "voice_status":         "",
-        "spoken_text":          "",
-        "ai_reply":             "",
-        "music_rec":            "",
-        "last_tip":             "",
-        "maitri_speaking_until": 0.0,
-        # biometric
-        "last_detection_ms":    0,
-        "zero_face_streak":     0,
-        "behavior":             "Calm",
-        "fatigue":              "Awake",
-        "focus":                "Focused",
+        "voice_status":      "",
+        "spoken_text":       "",
+        "ai_reply":          "",
+        "music_rec":         "",
+        "last_tip":          "",
+        # biometric signals
+        "last_detection_ms": 0,
+        "zero_face_streak":  0,
+        "behavior":          "Calm",
+        "fatigue":           "Awake",
+        "focus":             "Focused",
         # mood tracking
-        "prev_emotion":         "",
-        "current_emotion":      "neutral",
-        "greeting_sent":        False,
-        # continuous voice loop
-        "voice_loop_active":    False,
+        "prev_emotion":      "",
+        "current_emotion":   "neutral",
+        "greeting_sent":     False,
+        # continuous voice loop flag
+        "voice_loop_active": False,
+        # alert history (for report)
+        "_alert_history":    [],
     }
 
 
@@ -150,11 +144,8 @@ def _watchdog():
         try:
             with _ses_lock:
                 snap = list(sessions.items())
-
             for sid, s in snap:
                 elapsed = time.time() - s["last_frame_time"]
-
-                # Stale detection
                 if elapsed > FRAME_TIMEOUT and s["status"] == "active":
                     s["status"] = "stale"
                     socketio.emit("session_health", {
@@ -162,14 +153,11 @@ def _watchdog():
                         "reason": f"No frames for {elapsed:.0f}s",
                         "timestamp": datetime.utcnow().isoformat(),
                     }, room=sid)
-
-                # FIX: voice thread resurrection — _voice_threads is now module-level
-                vt = _voice_threads.get(sid)
+                # Voice loop watchdog: resurrect if it died unexpectedly
+                vt = _voice_threads.get(sid) if "_voice_threads" in dir() else None
                 if s.get("voice_loop_active") and (vt is None or not vt.is_alive()):
                     logger.warning("[%s] Voice loop died — restarting", sid)
                     start_voice_loop(s, sid)
-
-                # Degraded detection
                 if s["consec_errors"] >= MAX_ERRORS and s["status"] != "degraded":
                     s["status"] = "degraded"
                     socketio.emit("session_health", {
@@ -177,15 +165,12 @@ def _watchdog():
                         "reason": f"{s['consec_errors']} consecutive errors",
                         "timestamp": datetime.utcnow().isoformat(),
                     }, room=sid)
-
-                # Heartbeat
                 if s["status"] == "active":
                     socketio.emit("heartbeat", {
                         "session_id": sid, "frame_count": s["frame_count"],
                         "last_frame_ago": round(elapsed, 1),
                         "timestamp": datetime.utcnow().isoformat(),
                     }, room=sid)
-
         except Exception as e:
             logger.error("Watchdog: %s", e)
 
@@ -205,8 +190,7 @@ def safe_detect(frame) -> tuple[list, float]:
 
     t = threading.Thread(target=_run, daemon=True)
     t0 = time.time()
-    t.start()
-    t.join(timeout=DETECT_TIMEOUT)
+    t.start(); t.join(timeout=DETECT_TIMEOUT)
     ms = (time.time() - t0) * 1000
     if t.is_alive():
         logger.warning("DeepFace timeout %.0fms", ms)
@@ -231,8 +215,8 @@ def get_mental_state(log: list) -> str:
 
 def get_focus_state(detected: bool, s: dict) -> str:
     if detected:
-        s["last_seen_time"]    = time.time()
-        s["zero_face_streak"]  = 0
+        s["last_seen_time"] = time.time()
+        s["zero_face_streak"] = 0
         return "Focused"
     s["zero_face_streak"] = s.get("zero_face_streak", 0) + 1
     return "Not Attentive" if time.time() - s["last_seen_time"] > FACE_TIMEOUT else "Idle"
@@ -240,44 +224,30 @@ def get_focus_state(detected: bool, s: dict) -> str:
 
 def get_trend(trend_log: deque) -> dict:
     if not trend_log: return {}
-    c = Counter(trend_log)
-    n = len(trend_log)
+    c = Counter(trend_log); n = len(trend_log)
     return {k: round(v / n * 100, 1) for k, v in c.most_common()}
 
 
-def _speaking_until_for(text: str) -> float:
-    """Calculate timestamp when it is safe to open the mic after speaking `text`."""
-    words = len(text.split())
-    secs  = max(2.0, (words / TTS_WPM) * 60.0)
-    return time.time() + secs + TTS_HARDWARE_BUF
-
-
-# ── Core Maitri respond ───────────────────────────────────────────────────────
+# ── Maitri speak & respond helper ────────────────────────────────────────────
 def maitri_respond(session: dict, sid: str, emotion: str,
                    user_text: str = "", prev_emotion: str = "",
-                   mood_changed: bool = False, is_warmth: bool = False):
+                   mood_changed: bool = False):
     """
-    Generate AI response (with tip always included), speak it, emit to frontend.
-    Now passes full conversation history to AI for genuine multi-turn memory.
+    Generate AI response, speak it, emit voice_update via WebSocket.
+    This is the central function that powers ALL of Maitri's voice output.
     """
-    if is_warmth:
-        ai = get_warmth_checkin(session_id=sid, emotion=emotion)
-    else:
-        ai = get_response(
-            emotion, user_text,
-            behavior=session.get("behavior", "Calm"),
-            fatigue=session.get("fatigue", "Awake"),
-            focus=session.get("focus", "Focused"),
-            prev_emotion=prev_emotion if mood_changed else None,
-            session_id=sid,
-            conversation_history=session.get("conversation", []),   # ← multi-turn memory
-        )
-
+    ai = get_response(
+        emotion, user_text,
+        behavior=session.get("behavior", "Calm"),
+        fatigue=session.get("fatigue", "Awake"),
+        focus=session.get("focus", "Focused"),
+        prev_emotion=prev_emotion if mood_changed else None,
+        session_id=sid,
+    )
     session["ai_reply"]  = ai["reply"]
     session["music_rec"] = ai["music"]
     session["last_tip"]  = ai["tip"]
 
-    # Log to conversation history
     if user_text:
         session["conversation"].append({
             "role": "user", "text": user_text,
@@ -287,13 +257,11 @@ def maitri_respond(session: dict, sid: str, emotion: str,
         "role": "maitri", "text": ai["reply"],
         "ts": datetime.utcnow().isoformat()
     })
-    # Keep conversation history bounded (last 40 turns)
-    if len(session["conversation"]) > 40:
-        session["conversation"] = session["conversation"][-40:]
 
-    # Speak the full reply (which already includes the tip)
+    # Speak (non-blocking queue)
     speak(ai["reply"])
-    session["maitri_speaking_until"] = _speaking_until_for(ai["reply"])
+    # Mark session so transcript handler ignores Maitri's own voice
+    session["maitri_speaking_until"] = time.time() + max(3.0, len(ai["reply"].split()) / 2.0)
 
     # Broadcast to frontend
     socketio.emit("voice_update", {
@@ -306,19 +274,27 @@ def maitri_respond(session: dict, sid: str, emotion: str,
         "mood_changed":  mood_changed,
         "ai_powered":    ai.get("ai_powered", False),
         "ai_provider":   ai.get("provider", "fallback"),
-        "is_warmth":     is_warmth,
         "timestamp":     datetime.utcnow().isoformat(),
     }, room=sid)
 
-    logger.info("[%s] Maitri→ %s...", sid, ai["reply"][:70])
+    logger.info("[%s] Maitri→ %s...", sid, ai["reply"][:60])
 
 
 # ── Continuous voice loop ─────────────────────────────────────────────────────
+# Runs in a daemon thread per session.
+# Listens → transcribes → responds → repeats immediately.
+_voice_lock = threading.Lock()
+
+
 def continuous_voice_loop(session: dict, sid: str):
     """
     Always-on voice loop — NEVER stops unless explicitly told to.
-    KEY FIX: Thread is registered in _voice_threads BEFORE starting,
-    so watchdog can properly detect live/dead state without spurious restarts.
+    Bugs fixed:
+      - Does NOT check session status (stale/degraded no longer kills voice)
+      - maitri_respond errors are caught per-iteration, loop continues
+      - Mic errors: retries after 1s, never exits
+      - STT network errors: waits 2s then continues
+      - TTS overlap: waits politely then listens again
     """
     logger.info("[%s] Voice loop started", sid)
     session["voice_loop_active"] = True
@@ -326,31 +302,45 @@ def continuous_voice_loop(session: dict, sid: str):
 
     while session.get("voice_loop_active", False):
 
-        # ── Wait for TTS to finish (time-based, not just flag) ────────────
-        wait_until = session.get("maitri_speaking_until", 0.0)
-        while time.time() < wait_until or is_speaking():
-            time.sleep(0.25)
-        # Extra silence buffer to prevent echo/reverb
-        time.sleep(0.4)
+        # ── Wait for TTS to finish + hardware drain before listening ─────
+        # is_speaking() now includes a time-based buffer after runAndWait
+        waited = 0
+        while is_speaking() and waited < 60:   # max 18s wait
+            time.sleep(0.3)
+            waited += 1
+
+        # Extra silence after speaking — prevents mic picking up echo/reverb
+        # Scale with how long Maitri was speaking (longer speech = more reverb)
+        if waited > 0:
+            silence_buf = min(1.5, 0.3 + waited * 0.05)
+            time.sleep(silence_buf)
 
         # ── Emit listening status ─────────────────────────────────────────
         try:
             session["voice_status"] = "Listening..."
             socketio.emit("voice_update", {
                 "voice_status": "Listening...",
-                "timestamp":    datetime.utcnow().isoformat(),
+                "timestamp": datetime.utcnow().isoformat(),
             }, room=sid)
         except Exception:
             pass
 
-        # ── Record + Transcribe ───────────────────────────────────────────
+        # ── Record ────────────────────────────────────────────────────────
+        audio = None
+        try:
+            audio = record_audio(timeout=5, phrase_limit=12)
+        except Exception as e:
+            logger.error("[%s] record_audio exception: %s", sid, e)
+            consecutive_errors += 1
+            time.sleep(1)
+            continue
+
+        # ── Transcribe ────────────────────────────────────────────────────
         spoken = ""
         try:
-            rec    = record_audio(timeout=5, phrase_limit=12)
-            text, _ = speech_to_text(rec) if rec["success"] else ("", "none")
-            spoken = text
+            spoken = speech_to_text(audio)
         except Exception as e:
-            logger.error("[%s] Voice loop record error: %s", sid, e)
+            logger.error("[%s] speech_to_text exception: %s", sid, e)
             consecutive_errors += 1
             time.sleep(1)
             continue
@@ -382,54 +372,44 @@ def continuous_voice_loop(session: dict, sid: str):
                 session["last_voice_time"] = time.time()
             except Exception as e:
                 logger.error("[%s] maitri_respond error: %s", sid, e)
+                # Don't stop the loop — just log and continue listening
 
         else:
-            # No speech — check if it's time for a warmth check-in
-            now = time.time()
-            if now - session.get("last_voice_time", 0) > VOICE_AUTO_SEC and not is_speaking():
-                try:
-                    maitri_respond(
-                        session, sid,
-                        emotion=session.get("current_emotion", "neutral"),
-                        user_text="", prev_emotion="",
-                        mood_changed=False, is_warmth=True,
-                    )
-                    session["last_voice_time"] = now
-                except Exception as e:
-                    logger.error("[%s] warmth check-in error: %s", sid, e)
-
+            # No speech or timeout — loop back silently
             consecutive_errors = max(0, consecutive_errors - 1)
 
-        # Back-off on repeated errors
+        # ── Back-off if too many consecutive errors (e.g. no internet) ────
         if consecutive_errors >= 5:
-            logger.warning("[%s] %d consecutive errors — pausing 5s", sid, consecutive_errors)
+            logger.warning("[%s] Voice loop: %d consecutive errors, pausing 5s", sid, consecutive_errors)
             time.sleep(5)
-            consecutive_errors = 0
+            consecutive_errors = 0  # reset and try again
 
-    session["voice_status"]     = ""
+    session["voice_status"] = ""
     session["voice_loop_active"] = False
     logger.info("[%s] Voice loop stopped", sid)
 
 
+# Track voice threads so we can check if they're still alive
+_voice_threads: dict[str, threading.Thread] = {}
+
 def start_voice_loop(session: dict, sid: str):
     """
     Start the continuous voice loop.
-    FIX: registers thread in _voice_threads BEFORE checking if alive,
-    so watchdog never sees a None thread for a running session.
+    Resurrects the thread if it died unexpectedly.
     """
     existing = _voice_threads.get(sid)
     if existing and existing.is_alive():
         logger.info("[%s] Voice loop already running", sid)
         return
-
+    # Reset the flag so the loop body runs
     session["voice_loop_active"] = True
     t = threading.Thread(
         target=continuous_voice_loop,
         args=(session, sid), daemon=True, name=f"voice-{sid[:8]}"
     )
-    _voice_threads[sid] = t    # register BEFORE start so watchdog sees it
+    _voice_threads[sid] = t
     t.start()
-    logger.info("[%s] Voice loop started (tid=%s)", sid, t.ident)
+    logger.info("[%s] Voice loop thread started (tid=%s)", sid, t.ident)
 
 
 def stop_voice_loop(session: dict):
@@ -440,7 +420,7 @@ def stop_voice_loop(session: dict):
 @app.route("/")
 def home():
     return jsonify({
-        "status": "running", "service": "MAITRI AI", "version": "6.0",
+        "status": "running", "service": "MAITRI AI", "version": "5.0",
         "ai_provider": AI_PROVIDER, "time": datetime.utcnow().isoformat(),
     })
 
@@ -452,9 +432,9 @@ def analyze():
     sid = request.sid_val
 
     try:
+        # ── Decode frame ──────────────────────────────────────────────────
         f = request.files.get("image")
-        if not f:
-            return jsonify({"error": "No image"}), 400
+        if not f: return jsonify({"error": "No image"}), 400
 
         raw = f.read()
         if len(raw) < MIN_FRAME_BYTES:
@@ -468,6 +448,7 @@ def analyze():
         ses["last_frame_time"] = time.time()
         ses["frame_count"]    += 1
 
+        # Recover from stale
         if ses["status"] == "stale":
             ses["status"] = "active"
             socketio.emit("session_health", {
@@ -475,7 +456,7 @@ def analyze():
                 "reason": "Frames resumed", "timestamp": datetime.utcnow().isoformat(),
             }, room=sid)
 
-        # ── Behavior ──────────────────────────────────────────────────────
+        # ── Behavior (fast, no model) ──────────────────────────────────────
         behavior = detect_behavior(frame)
         ses["behavior"] = behavior
 
@@ -503,8 +484,7 @@ def analyze():
 
         # ── Face found ─────────────────────────────────────────────────────
         ses["consec_errors"] = 0
-        if ses["status"] == "degraded":
-            ses["status"] = "active"
+        if ses["status"] == "degraded": ses["status"] = "active"
 
         primary    = faces[0]
         raw_emo    = primary.get("emotion", "neutral")
@@ -526,7 +506,7 @@ def analyze():
         ses["focus"]           = focus
         ses["current_emotion"] = final_emo
 
-        # ── Greeting ──────────────────────────────────────────────────────
+        # ── Greet on first detection ───────────────────────────────────────
         if not ses["greeting_sent"]:
             ses["greeting_sent"] = True
             greet = get_greeting(session_id=sid)
@@ -538,7 +518,6 @@ def analyze():
                 "ts": datetime.utcnow().isoformat()
             })
             speak(greet["reply"])
-            ses["maitri_speaking_until"] = _speaking_until_for(greet["reply"])
             socketio.emit("voice_update", {
                 "voice_status": "speaking",
                 "ai_reply":     greet["reply"],
@@ -550,17 +529,19 @@ def analyze():
                 "ai_provider":  "greeting",
                 "timestamp":    datetime.utcnow().isoformat(),
             }, room=sid)
+            # Start continuous voice loop
             start_voice_loop(ses, sid)
 
-        # ── Mood change response ───────────────────────────────────────────
-        prev_emo     = ses["prev_emotion"]
-        mood_changed = bool(prev_emo) and prev_emo != final_emo
+        # ── Detect mood change → immediate Maitri response ────────────────
+        prev_emo      = ses["prev_emotion"]
+        mood_changed  = bool(prev_emo) and prev_emo != final_emo
         ses["prev_emotion"] = final_emo
 
         now = time.time()
         if mood_changed:
             ses["mood_change_count"] += 1
             logger.info("[%s] Mood: %s → %s", sid, prev_emo, final_emo)
+            # Respond immediately to mood change (non-blocking thread)
             threading.Thread(
                 target=maitri_respond,
                 kwargs=dict(session=ses, sid=sid, emotion=final_emo,
@@ -570,35 +551,34 @@ def analyze():
             ).start()
             ses["last_voice_time"] = now
         elif now - ses["last_voice_time"] > VOICE_AUTO_SEC and not is_speaking():
-            # Warmth check-in (not a generic response — specifically for idle sessions)
+            # Periodic check-in even if mood stable
             threading.Thread(
                 target=maitri_respond,
                 kwargs=dict(session=ses, sid=sid, emotion=final_emo,
                             user_text="", prev_emotion="",
-                            mood_changed=False, is_warmth=True),
+                            mood_changed=False),
                 daemon=True
             ).start()
             ses["last_voice_time"] = now
 
-        # ── Alert ──────────────────────────────────────────────────────────
-        alert_obj = check_alert(list(ses["emotion_window"]))
-        alert_msg = None
-        if alert_obj:
-            if (now - ses["last_alert_time"]) >= ALERT_COOLDOWN:
-                ses["last_alert_time"] = now
-                ses["alert_count"]    += 1
-                # Speak the alert's TTS-friendly text
-                if alert_obj.get("speak") and not is_speaking():
-                    speak(alert_obj["speak"])
-                    ses["maitri_speaking_until"] = _speaking_until_for(alert_obj["speak"])
-                alert_msg = alert_obj.get("message")
+        # ── Alert (with cooldown) ──────────────────────────────────────────
+        alert = check_alert(list(ses["emotion_window"]))
+        if alert and (now - ses["last_alert_time"]) < ALERT_COOLDOWN:
+            alert = None
+        elif alert:
+            ses["last_alert_time"] = now
+            ses["alert_count"]    += 1
+            ses["_alert_history"].append({
+                "alert": alert, "frame": ses["frame_count"],
+                "ts": datetime.utcnow().isoformat()
+            })
 
         # ── Build payload ──────────────────────────────────────────────────
         p = _build_payload(sid, ses, {
             "emotion": final_emo, "raw_emotion": raw_emo,
             "confidence": confidence, "bounding_boxes": bboxes,
             "all_emotions": all_emos, "state": state, "focus": focus,
-            "fatigue": fatigue, "alert": alert_msg,
+            "fatigue": fatigue, "alert": alert,
             "reply":     ses["ai_reply"],
             "music_rec": ses["music_rec"],
             "tip":       ses["last_tip"],
@@ -635,7 +615,6 @@ def _build_payload(sid: str, ses: dict, data: dict) -> dict:
         "trend":             data.pop("trend", get_trend(ses["trend_log"])),
         "mood_change_count": ses.get("mood_change_count", 0),
         "ai_provider":       AI_PROVIDER,
-        "conversation_turns": len(ses.get("conversation", [])),
         "timestamp":         datetime.utcnow().isoformat(),
     }
     base.update(data)
@@ -647,8 +626,7 @@ def _build_payload(sid: str, ses: dict, data: dict) -> dict:
 def voice_start(session_id: str):
     with _ses_lock:
         ses = sessions.get(session_id)
-    if not ses:
-        return jsonify({"error": "Not found"}), 404
+    if not ses: return jsonify({"error": "Not found"}), 404
     start_voice_loop(ses, session_id)
     return jsonify({"status": "voice loop started"})
 
@@ -657,36 +635,28 @@ def voice_start(session_id: str):
 def voice_stop(session_id: str):
     with _ses_lock:
         ses = sessions.get(session_id)
-    if not ses:
-        return jsonify({"error": "Not found"}), 404
+    if not ses: return jsonify({"error": "Not found"}), 404
     stop_voice_loop(ses)
     return jsonify({"status": "voice loop stopped"})
 
 
-# ── Standard routes ───────────────────────────────────────────────────────────
+# ── Standard CRUD routes ──────────────────────────────────────────────────────
 @app.route("/session/<session_id>/report")
 def report(session_id: str):
-    with _ses_lock:
-        ses = sessions.get(session_id)
-    if not ses:
-        return jsonify({"error": "Not found"}), 404
-    log = ses["full_log"]
-    c   = Counter(log)
+    with _ses_lock: ses = sessions.get(session_id)
+    if not ses: return jsonify({"error": "Not found"}), 404
+    log = ses["full_log"]; c = Counter(log)
     return jsonify({
         "session_id": session_id, "started_at": ses["started_at"],
         "generated_at": datetime.utcnow().isoformat(),
         "status": ses["status"], "frame_count": ses["frame_count"],
-        "alert_count": ses["alert_count"],
-        "mood_change_count": ses.get("mood_change_count", 0),
-        "error_count": ses["error_count"],
-        "last_detection_ms": ses["last_detection_ms"],
+        "alert_count": ses["alert_count"], "mood_change_count": ses.get("mood_change_count", 0),
+        "error_count": ses["error_count"], "last_detection_ms": ses["last_detection_ms"],
         "emotion_distribution": dict(c.most_common()),
         "dominant_emotion": c.most_common(1)[0][0] if log else None,
         "final_mental_state": get_mental_state(log[-10:] if log else []),
-        "trend": get_trend(ses["trend_log"]),
-        "log_length": len(log),
-        "last_spoken_text": ses["spoken_text"],
-        "last_ai_reply": ses["ai_reply"],
+        "trend": get_trend(ses["trend_log"]), "log_length": len(log),
+        "last_spoken_text": ses["spoken_text"], "last_ai_reply": ses["ai_reply"],
         "last_music_rec": ses["music_rec"],
         "conversation_turns": len(ses["conversation"]),
         "ai_provider": AI_PROVIDER,
@@ -695,32 +665,109 @@ def report(session_id: str):
 
 @app.route("/session/<session_id>/conversation")
 def conversation(session_id: str):
-    with _ses_lock:
-        ses = sessions.get(session_id)
-    if not ses:
-        return jsonify({"error": "Not found"}), 404
+    with _ses_lock: ses = sessions.get(session_id)
+    if not ses: return jsonify({"error": "Not found"}), 404
     return jsonify({"conversation": ses["conversation"], "count": len(ses["conversation"])})
 
 
 @app.route("/session/<session_id>/save", methods=["POST"])
 def save(session_id: str):
-    with _ses_lock:
-        ses = sessions.get(session_id)
-    if not ses:
-        return jsonify({"error": "Not found"}), 404
+    with _ses_lock: ses = sessions.get(session_id)
+    if not ses: return jsonify({"error": "Not found"}), 404
     try:
-        path = save_log(ses["full_log"], session_id)
-        return jsonify({"status": "saved", "path": str(path), "entries": len(ses["full_log"])})
+        # Build rich meta for the report
+        meta = {
+            "started_at":        ses.get("started_at", ""),
+            "frame_count":       ses.get("frame_count", 0),
+            "alert_count":       ses.get("alert_count", 0),
+            "mood_change_count": ses.get("mood_change_count", 0),
+            "ai_provider":       AI_PROVIDER,
+            "status":            ses.get("status", ""),
+            "last_detection_ms": ses.get("last_detection_ms", 0),
+        }
+        data = save_log(
+            ses["full_log"], session_id,
+            conversation=ses.get("conversation", []),
+            alerts=ses.get("_alert_history", []),
+            session_meta=meta,
+        )
+        paths = data.get("_saved_paths", {})
+        return jsonify({
+            "status":  "saved",
+            "paths":   paths,
+            "entries": len(ses["full_log"]),
+            "score":   data.get("wellbeing_score"),
+            "grade":   data.get("wellbeing_grade"),
+        })
     except Exception as e:
+        logger.exception("Save failed: %s", e)
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/session/<session_id>/report-full")
+def report_full(session_id: str):
+    """
+    Returns the complete rich report JSON for frontend rendering.
+    Does NOT save to disk (use /save for that).
+    """
+    with _ses_lock: ses = sessions.get(session_id)
+    if not ses: return jsonify({"error": "Not found"}), 404
+    try:
+        meta = {
+            "started_at":        ses.get("started_at", ""),
+            "frame_count":       ses.get("frame_count", 0),
+            "alert_count":       ses.get("alert_count", 0),
+            "mood_change_count": ses.get("mood_change_count", 0),
+            "ai_provider":       AI_PROVIDER,
+            "status":            ses.get("status", ""),
+            "last_detection_ms": ses.get("last_detection_ms", 0),
+            "fatigue":           ses.get("fatigue", ""),
+            "behavior":          ses.get("behavior", ""),
+            "focus":             ses.get("focus", ""),
+            "last_music_rec":    ses.get("music_rec", ""),
+            "last_tip":          ses.get("last_tip", ""),
+        }
+        data = build_report_data(
+            ses["full_log"], session_id,
+            conversation=ses.get("conversation", []),
+            alerts=ses.get("_alert_history", []),
+            session_meta=meta,
+        )
+        # Remove raw log from response to keep payload small
+        data.pop("_full_log", None)
+        return jsonify(data)
+    except Exception as e:
+        logger.exception("report-full error: %s", e)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/reports")
+def list_reports():
+    """List all saved report files in the reports/ folder."""
+    from pathlib import Path
+    import os
+    report_dir = Path("reports")
+    if not report_dir.exists():
+        return jsonify({"reports": []})
+    files = []
+    for f in sorted(report_dir.glob("report_*.json"), reverse=True):
+        try:
+            stat = f.stat()
+            files.append({
+                "filename": f.name,
+                "path":     str(f),
+                "size_kb":  round(stat.st_size / 1024, 1),
+                "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+            })
+        except Exception:
+            pass
+    return jsonify({"reports": files[:50]})  # last 50
 
 
 @app.route("/session/<session_id>/recover", methods=["POST"])
 def recover(session_id: str):
-    with _ses_lock:
-        ses = sessions.get(session_id)
-    if not ses:
-        return jsonify({"error": "Not found"}), 404
+    with _ses_lock: ses = sessions.get(session_id)
+    if not ses: return jsonify({"error": "Not found"}), 404
     old = ses["status"]
     ses.update({"status": "active", "consec_errors": 0,
                 "zero_face_streak": 0, "last_frame_time": time.time()})
@@ -735,8 +782,7 @@ def recover(session_id: str):
 def delete(session_id: str):
     with _ses_lock:
         ses = sessions.pop(session_id, None)
-    if ses:
-        stop_voice_loop(ses)
+    if ses: stop_voice_loop(ses)
     return jsonify({"status": "deleted" if ses else "not found"})
 
 
@@ -748,18 +794,17 @@ def list_sessions():
             "status": s["status"], "frame_count": s["frame_count"],
             "current_emotion": s.get("current_emotion", ""),
             "voice_active": s.get("voice_loop_active", False),
-            "conversation_turns": len(s.get("conversation", [])),
         } for sid, s in sessions.items()])
 
 
 @app.route("/ai-status")
 def ai_status():
-    from Pys.ai_responder import GEMINI_KEY, OPENAI_KEY, GROQ_KEY
+    from ai_responder import GEMINI_KEY, OPENAI_KEY, GROQ_KEY
     return jsonify({
-        "provider":        AI_PROVIDER,
-        "gemini_ready":    bool(GEMINI_KEY),
-        "openai_ready":    bool(OPENAI_KEY),
-        "groq_ready":      bool(GROQ_KEY),
+        "provider": AI_PROVIDER,
+        "gemini_ready": bool(GEMINI_KEY),
+        "openai_ready": bool(OPENAI_KEY),
+        "groq_ready":   bool(GROQ_KEY),
         "fallback_active": AI_PROVIDER == "fallback",
         "message": (
             f"Maitri is powered by {AI_PROVIDER.upper()} AI"
@@ -772,7 +817,7 @@ def ai_status():
 @app.route("/health")
 def health():
     return jsonify({
-        "status": "ok", "version": "6.0", "ai_provider": AI_PROVIDER,
+        "status": "ok", "version": "5.0", "ai_provider": AI_PROVIDER,
         "active_sessions": sum(1 for s in sessions.values() if s["status"] == "active"),
         "total_sessions": len(sessions),
         "voice_loops_active": sum(1 for s in sessions.values() if s.get("voice_loop_active")),
@@ -802,8 +847,7 @@ def on_join(data):
 @socketio.on("leave")
 def on_leave(data):
     sid = data.get("session_id")
-    if sid:
-        leave_room(sid)
+    if sid: leave_room(sid)
 
 
 @socketio.on("ping_session")
@@ -813,29 +857,30 @@ def on_ping(_):
 
 @socketio.on("set_language")
 def on_set_language(data):
+    """User selected their music language preference from the modal."""
     sid  = data.get("session_id", "")
     lang = data.get("lang", "hindi").lower().strip()
-    if not sid:
-        return
+    if not sid: return
 
     set_session_language(sid, lang)
     lang_display = LANG_DISPLAY.get(lang, lang.title())
     logger.info("[%s] Language set via modal: %s", sid, lang)
 
+    # Confirm back to frontend
     emit("language_update", {
         "session_id":   sid,
         "lang":         lang,
         "lang_display": lang_display,
     }, room=sid)
 
+    # Maitri speaks a warm confirmation
     ses = get_or_create(sid)
     confirm_msg = (
         f"Wonderful! I'll recommend {lang_display} music for you from now on. "
-        f"I love that — it makes everything feel so much more personal and warm. 🎵"
+        f"I love that — it makes everything feel more personal. 🎵"
     )
     ses["ai_reply"] = confirm_msg
     speak(confirm_msg)
-    ses["maitri_speaking_until"] = _speaking_until_for(confirm_msg)
     socketio.emit("voice_update", {
         "voice_status": "speaking",
         "ai_reply":     confirm_msg,
@@ -847,46 +892,49 @@ def on_set_language(data):
 def on_transcript(data):
     """
     Receives browser Web Speech API transcript.
-    Echo guard: ignores transcript if Maitri is speaking.
-    Now passes full conversation history to AI for multi-turn context.
+    Echo guard: ignores transcript if Maitri is currently speaking
+    (prevents her own TTS from being transcribed as user input).
     """
     sid  = data.get("session_id", "")
     text = (data.get("text") or "").strip()
-    if not sid or not text:
-        return
+    if not sid or not text: return
 
     # ── Echo guard ────────────────────────────────────────────────────────
     ses = sessions.get(sid)
     if ses:
-        if time.time() < ses.get("maitri_speaking_until", 0):
-            logger.info("[%s] Echo guard: Maitri speaking — ignoring: %s", sid, text[:40])
+        maitri_end = ses.get("maitri_speaking_until", 0)
+        if time.time() < maitri_end:
+            logger.info("[%s] Echo guard: ignoring transcript while Maitri is speaking: %s", sid, text[:40])
             return
+        # Also reject transcripts that are suspiciously similar to Maitri's last reply
         last_reply = ses.get("ai_reply", "").lower()
         if last_reply and len(text) > 10:
             t_words = set(text.lower().split())
             r_words = set(last_reply.split())
             overlap = len(t_words & r_words)
             if overlap / max(len(t_words), 1) > 0.40:
-                logger.info("[%s] Echo guard: %.0f%% overlap — ignoring", sid,
-                            overlap / len(t_words) * 100)
+                logger.info("[%s] Echo guard: transcript looks like Maitri's own speech (%.0f%% overlap), ignoring: %s",
+                            sid, overlap/len(t_words)*100, text[:40])
                 return
 
-    # ── Language detection ─────────────────────────────────────────────────
+    # ── Detect language preference from user speech ───────────────────────────
     detected_lang = detect_language_from_text(text.lower())
     if detected_lang:
         set_session_language(sid, detected_lang)
         lang_display = LANG_DISPLAY.get(detected_lang, detected_lang.title())
-        logger.info("[%s] Language detected from speech: %s", sid, detected_lang)
+        logger.info("[%s] Language preference detected from speech: %s", sid, detected_lang)
+        # Emit language change to frontend
         socketio.emit("language_update", {
-            "session_id": sid, "lang": detected_lang,
+            "session_id": sid,
+            "lang": detected_lang,
             "lang_display": lang_display,
         }, room=sid)
 
     ses = get_or_create(sid)
-    ses["spoken_text"]     = text
+    ses["spoken_text"] = text
     ses["last_voice_time"] = time.time()
 
-    # Respond in background
+    # Respond in background so socket event returns fast
     threading.Thread(
         target=maitri_respond,
         kwargs=dict(session=ses, sid=sid,
@@ -899,8 +947,7 @@ def on_transcript(data):
 @socketio.on("stop_voice")
 def on_stop_voice(data):
     sid = data.get("session_id", "")
-    if not sid:
-        return
+    if not sid: return
     ses = sessions.get(sid)
     if ses:
         stop_voice_loop(ses)
@@ -911,8 +958,7 @@ def on_stop_voice(data):
 @socketio.on("start_voice")
 def on_start_voice(data):
     sid = data.get("session_id", "")
-    if not sid:
-        return
+    if not sid: return
     ses = get_or_create(sid)
     start_voice_loop(ses, sid)
     emit("voice_update", {"voice_status": "Listening...",
@@ -921,5 +967,5 @@ def on_start_voice(data):
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    logger.info("MAITRI AI v6.0 starting — AI provider: %s", AI_PROVIDER)
+    logger.info("MAITRI AI v5.0 starting — AI provider: %s", AI_PROVIDER)
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
