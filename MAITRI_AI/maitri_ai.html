@@ -2026,15 +2026,375 @@
                 <div id="event-log"></div>
             </div>
 
-            <!-- Session report (hidden) -->
-            <div class="panel" id="report-panel" style="display:none">
-                <div class="ptitle">📄 Session Report</div>
-                <pre id="report-pre" style="font-family:var(--font-mono);font-size:.58rem;color:var(--txt2);white-space:pre-wrap;line-height:1.65;max-height:220px;overflow-y:auto"></pre>
-            </div>
+            <!-- Report panel removed — now uses full-screen modal -->
 
         </div>
     </div>
     <div id="alert-toast">ALERT</div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         MAITRI REPORT MODAL — Full-Screen Rich Visual Report
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div id="report-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:#020c14;overflow-y:auto;font-family:'Exo 2',sans-serif;">
+
+        <!-- Scanline overlay -->
+        <div style="position:fixed;inset:0;pointer-events:none;z-index:1;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,229,255,.004) 3px,rgba(0,229,255,.004) 4px)"></div>
+
+        <div style="position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:24px 20px 60px;">
+
+            <!-- Header bar -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;border-bottom:1px solid #163348;padding-bottom:16px;">
+                <div>
+                    <div style="font-family:'Orbitron',monospace;font-size:1.15rem;font-weight:900;color:#00e5ff;text-shadow:0 0 12px rgba(0,229,255,.5);letter-spacing:.15em;">MAITRI AI</div>
+                    <div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:#4a7a90;margin-top:2px;">WELLBEING SESSION REPORT v3.0</div>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button id="rpt-save-btn" style="background:#001a0a;border:1px solid #00ff87;color:#00ff87;font-family:'Orbitron',monospace;font-size:.55rem;padding:7px 14px;border-radius:4px;cursor:pointer;letter-spacing:.08em;" title="Save to reports/ folder">💾 SAVE REPORT</button>
+                    <button id="rpt-close" style="background:#1a0008;border:1px solid #ff3355;color:#ff3355;font-family:'Orbitron',monospace;font-size:.55rem;padding:7px 14px;border-radius:4px;cursor:pointer;letter-spacing:.08em;">✕ CLOSE</button>
+                </div>
+            </div>
+
+            <!-- Loading state -->
+            <div id="rpt-loading" style="text-align:center;padding:80px 0;">
+                <div style="font-family:'Orbitron',monospace;font-size:.8rem;color:#4a7a90;animation:rptPulse 1.2s ease-in-out infinite;">⬡ GENERATING REPORT...</div>
+            </div>
+
+            <!-- Report content (hidden until data loads) -->
+            <div id="rpt-content" style="display:none;">
+
+                <!-- ── ROW 1: Hero Stats ───────────────────────────────────────── -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
+                    <div class="rpt-card" id="rpt-score-card">
+                        <div class="rpt-card-lbl">WELLBEING SCORE</div>
+                        <div class="rpt-card-val" id="rpt-score" style="font-size:2.2rem;color:#00ff87;">—</div>
+                        <div class="rpt-card-sub" id="rpt-grade">—</div>
+                        <div id="rpt-score-bar-wrap" style="margin-top:8px;height:4px;background:#0d2535;border-radius:2px;overflow:hidden;">
+                            <div id="rpt-score-bar" style="height:100%;background:linear-gradient(90deg,#00ff87,#00e5ff);width:0%;transition:width 1.2s ease;border-radius:2px;"></div>
+                        </div>
+                    </div>
+                    <div class="rpt-card">
+                        <div class="rpt-card-lbl">DOMINANT EMOTION</div>
+                        <div class="rpt-card-val" id="rpt-dominant" style="font-size:1.3rem;">—</div>
+                        <div class="rpt-card-sub" id="rpt-dominant-lbl">—</div>
+                    </div>
+                    <div class="rpt-card">
+                        <div class="rpt-card-lbl">TOTAL FRAMES</div>
+                        <div class="rpt-card-val" id="rpt-frames" style="color:#00e5ff;">—</div>
+                        <div class="rpt-card-sub" id="rpt-mood-changes">— mood changes</div>
+                    </div>
+                    <div class="rpt-card">
+                        <div class="rpt-card-lbl">POSITIVE / NEGATIVE</div>
+                        <div style="display:flex;gap:8px;align-items:baseline;margin-top:4px;">
+                            <span class="rpt-card-val" id="rpt-pos" style="color:#00ff87;">—</span>
+                            <span style="color:#4a7a90;font-size:.7rem;">vs</span>
+                            <span class="rpt-card-val" id="rpt-neg" style="color:#ff3355;">—</span>
+                        </div>
+                        <div class="rpt-card-sub">frames detected</div>
+                    </div>
+                    <div class="rpt-card">
+                        <div class="rpt-card-lbl">CONVERSATION</div>
+                        <div class="rpt-card-val" id="rpt-conv" style="color:#c084fc;">—</div>
+                        <div class="rpt-card-sub" id="rpt-conv-sub">turns with Maitri</div>
+                    </div>
+                    <div class="rpt-card">
+                        <div class="rpt-card-lbl">ALERTS FIRED</div>
+                        <div class="rpt-card-val" id="rpt-alerts" style="color:#ffc107;">—</div>
+                        <div class="rpt-card-sub">during session</div>
+                    </div>
+                </div>
+
+                <!-- ── ROW 2: Charts grid ──────────────────────────────────────── -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+
+                    <!-- Emotion Distribution Pie -->
+                    <div class="rpt-panel">
+                        <div class="rpt-ptitle">🥧 Emotion Distribution</div>
+                        <div style="display:flex;gap:16px;align-items:center;">
+                            <div style="width:180px;height:180px;flex-shrink:0;position:relative;">
+                                <canvas id="rpt-pie"></canvas>
+                            </div>
+                            <div id="rpt-pie-legend" style="flex:1;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Emotion Counts Bar -->
+                    <div class="rpt-panel">
+                        <div class="rpt-ptitle">📊 Emotion Counts</div>
+                        <div style="height:180px;position:relative;">
+                            <canvas id="rpt-bar"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── ROW 3: Timeline full-width ─────────────────────────────── -->
+                <div class="rpt-panel" style="margin-bottom:16px;">
+                    <div class="rpt-ptitle">📈 Emotion Timeline — Full Session</div>
+                    <div style="height:160px;position:relative;">
+                        <canvas id="rpt-timeline"></canvas>
+                    </div>
+                    <div id="rpt-timeline-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+                </div>
+
+                <!-- ── ROW 4: Wellbeing over time + Emotion breakdown bars ──── -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                    <!-- Wellbeing score over time (area) -->
+                    <div class="rpt-panel">
+                        <div class="rpt-ptitle">💚 Wellbeing Score — Per Phase</div>
+                        <div style="height:150px;position:relative;">
+                            <canvas id="rpt-wellness-chart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Detailed emotion bars -->
+                    <div class="rpt-panel">
+                        <div class="rpt-ptitle">🎭 Emotion Breakdown</div>
+                        <div id="rpt-emo-bars" style="display:flex;flex-direction:column;gap:6px;margin-top:4px;"></div>
+                    </div>
+                </div>
+
+                <!-- ── ROW 5: Session Phases ──────────────────────────────────── -->
+                <div class="rpt-panel" style="margin-bottom:16px;">
+                    <div class="rpt-ptitle">⏱️ Session Phases</div>
+                    <div id="rpt-phases" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:8px;"></div>
+                </div>
+
+                <!-- ── ROW 6: Streaks + Session info ─────────────────────────── -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                    <div class="rpt-panel">
+                        <div class="rpt-ptitle">🔥 Streaks & Patterns</div>
+                        <div id="rpt-streaks" style="margin-top:6px;"></div>
+                    </div>
+                    <div class="rpt-panel">
+                        <div class="rpt-ptitle">🔬 Session Info</div>
+                        <div id="rpt-meta" style="margin-top:6px;"></div>
+                    </div>
+                </div>
+
+                <!-- ── ROW 7: Conversation transcript ────────────────────────── -->
+                <div class="rpt-panel" style="margin-bottom:16px;">
+                    <div class="rpt-ptitle">💬 Conversation with Maitri <span id="rpt-conv-count" style="color:#4a7a90;font-size:.6rem;font-weight:400;margin-left:6px;">(last 20 turns)</span></div>
+                    <div id="rpt-conversation" style="max-height:300px;overflow-y:auto;margin-top:8px;display:flex;flex-direction:column;gap:6px;"></div>
+                </div>
+
+                <!-- ── ROW 8: Alert history ───────────────────────────────────── -->
+                <div class="rpt-panel" style="margin-bottom:16px;">
+                    <div class="rpt-ptitle">⚠️ Alert History</div>
+                    <div id="rpt-alert-hist" style="margin-top:6px;"></div>
+                </div>
+
+                <!-- ── ROW 9: Raw data toggle ─────────────────────────────────── -->
+                <div class="rpt-panel">
+                    <div class="rpt-ptitle" style="cursor:pointer;" id="rpt-raw-toggle">🗃️ Raw JSON Data <span style="color:#4a7a90;font-size:.6rem;">(click to expand)</span></div>
+                    <pre id="rpt-raw" style="display:none;font-family:'Share Tech Mono',monospace;font-size:.55rem;color:#4a7a90;white-space:pre-wrap;line-height:1.6;margin-top:8px;max-height:300px;overflow-y:auto;border:1px solid #0d2535;padding:10px;border-radius:4px;background:#020c14;"></pre>
+                </div>
+
+            </div>
+            <!-- /rpt-content -->
+        </div>
+        <!-- /max-width wrapper -->
+    </div>
+    <!-- /report-modal -->
+
+    <style>
+        @keyframes rptPulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .4;
+            }
+        }
+        
+        .rpt-card {
+            background: #071018;
+            border: 1px solid #0d2535;
+            border-radius: 6px;
+            padding: 14px 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .rpt-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00e5ff, transparent);
+            opacity: .3;
+        }
+        
+        .rpt-card-lbl {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: .48rem;
+            color: #4a7a90;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        
+        .rpt-card-val {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: #daeaf5;
+            line-height: 1;
+        }
+        
+        .rpt-card-sub {
+            font-family: 'Exo 2', sans-serif;
+            font-size: .62rem;
+            color: #4a7a90;
+            margin-top: 4px;
+        }
+        
+        .rpt-panel {
+            background: #071018;
+            border: 1px solid #0d2535;
+            border-radius: 6px;
+            padding: 14px 16px;
+        }
+        
+        .rpt-ptitle {
+            font-family: 'Orbitron', monospace;
+            font-size: .62rem;
+            font-weight: 600;
+            color: #00e5ff;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            border-bottom: 1px solid #0d2535;
+            padding-bottom: 8px;
+            margin-bottom: 4px;
+        }
+        
+        .rpt-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            border-bottom: 1px solid #0d2535;
+            font-size: .62rem;
+        }
+        
+        .rpt-meta-row:last-child {
+            border-bottom: none;
+        }
+        
+        .rpt-meta-k {
+            color: #4a7a90;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .rpt-meta-v {
+            color: #daeaf5;
+            font-family: 'Share Tech Mono', monospace;
+            text-align: right;
+        }
+        
+        .rpt-emo-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .rpt-emo-name {
+            font-family: 'Exo 2', sans-serif;
+            font-size: .62rem;
+            color: #daeaf5;
+            width: 72px;
+            flex-shrink: 0;
+        }
+        
+        .rpt-emo-track {
+            flex: 1;
+            height: 10px;
+            background: #0d2535;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .rpt-emo-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 1s ease;
+        }
+        
+        .rpt-emo-pct {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: .58rem;
+            color: #4a7a90;
+            width: 38px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        
+        .rpt-phase-card {
+            background: #0b1822;
+            border: 1px solid #163348;
+            border-radius: 5px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .rpt-streak-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #0d2535;
+            font-size: .65rem;
+        }
+        
+        .rpt-streak-row:last-child {
+            border-bottom: none;
+        }
+        
+        .rpt-chat-bubble {
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: .65rem;
+            line-height: 1.55;
+            max-width: 85%;
+            word-break: break-word;
+        }
+        
+        .rpt-chat-user {
+            background: #001a20;
+            border: 1px solid #00e5ff33;
+            color: #daeaf5;
+            align-self: flex-end;
+            margin-left: auto;
+            border-radius: 10px 10px 2px 10px;
+        }
+        
+        .rpt-chat-maitri {
+            background: #14082a;
+            border: 1px solid #c084fc33;
+            color: #daeaf5;
+            border-radius: 10px 10px 10px 2px;
+        }
+        
+        .rpt-chat-role {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: .48rem;
+            color: #4a7a90;
+            margin-bottom: 3px;
+        }
+        
+        .rpt-alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #0d2535;
+            font-size: .62rem;
+        }
+        
+        .rpt-alert-item:last-child {
+            border-bottom: none;
+        }
+    </style>
 
     <!-- ═══ EXIT BUTTON — position set by user ═══ -->
     <button id="btn-exit" title="Exit MAITRI AI">✕ EXIT</button>
@@ -3441,21 +3801,541 @@
             takeShot();
         });
 
-        document.getElementById('btn-report').addEventListener('click', async function() {
+        document.getElementById('btn-report').addEventListener('click', openReportModal);
+
+        // ── Report Modal ───────────────────────────────────────────────────────
+        document.getElementById('rpt-close').addEventListener('click', function() {
+            document.getElementById('report-modal').style.display = 'none';
+        });
+        document.getElementById('rpt-raw-toggle').addEventListener('click', function() {
+            var el = document.getElementById('rpt-raw');
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        });
+        document.getElementById('rpt-save-btn').addEventListener('click', async function() {
             try {
-                var r = await fetch(API + '/session/' + sid + '/report', {
+                var r = await fetch(API + '/session/' + sid + '/save', {
+                    method: 'POST',
                     headers: {
                         'X-Session-ID': sid
                     }
                 });
                 var d = await r.json();
-                document.getElementById('report-panel').style.display = 'block';
-                document.getElementById('report-pre').textContent = JSON.stringify(d, null, 2);
-                logEvent('Report fetched', 'good');
+                if (d.status === 'saved') {
+                    this.textContent = '✅ SAVED!';
+                    this.style.color = '#00ff87';
+                    setTimeout(() => {
+                        this.textContent = '💾 SAVE REPORT';
+                        this.style.color = '#00ff87';
+                    }, 2500);
+                    logEvent('Report saved — score ' + d.score + ' [' + d.grade + ']', 'good');
+                }
+            } catch (e) {
+                logEvent('Save error: ' + e.message, 'error');
+            }
+        });
+
+        var _rptPie = null,
+            _rptBar = null,
+            _rptTl = null,
+            _rptWell = null;
+
+        async function openReportModal() {
+            var modal = document.getElementById('report-modal');
+            modal.style.display = 'block';
+            modal.scrollTop = 0;
+            document.getElementById('rpt-loading').style.display = 'block';
+            document.getElementById('rpt-content').style.display = 'none';
+            try {
+                var r = await fetch(API + '/session/' + sid + '/report-full', {
+                    headers: {
+                        'X-Session-ID': sid
+                    }
+                });
+                var d = await r.json();
+                if (d.error) {
+                    logEvent('Report error: ' + d.error, 'error');
+                    return;
+                }
+                renderReport(d);
+                logEvent('Report opened', 'good');
             } catch (e) {
                 logEvent('Report error: ' + e.message, 'error');
             }
-        });
+        }
+
+        function renderReport(d) {
+            document.getElementById('rpt-loading').style.display = 'none';
+            document.getElementById('rpt-content').style.display = 'block';
+
+            var EMO_COLORS = d.emotion_colors || {
+                happy: '#00ff87',
+                neutral: '#00e5ff',
+                sad: '#5b8dd9',
+                angry: '#ff3355',
+                fear: '#c084fc',
+                surprise: '#ffc107',
+                disgust: '#ff8c42'
+            };
+
+            // ── Hero stats ─────────────────────────────────────────────────
+            var score = d.wellbeing_score || 0;
+            var scoreColor = score >= 75 ? '#00ff87' : score >= 50 ? '#ffc107' : '#ff3355';
+            document.getElementById('rpt-score').textContent = score + '/100';
+            document.getElementById('rpt-score').style.color = scoreColor;
+            document.getElementById('rpt-grade').textContent = (d.wellbeing_icon || '') + ' ' + (d.wellbeing_grade || '');
+            setTimeout(function() {
+                document.getElementById('rpt-score-bar').style.width = score + '%';
+                document.getElementById('rpt-score-bar').style.background =
+                    'linear-gradient(90deg,' + scoreColor + ',#00e5ff)';
+            }, 200);
+            document.getElementById('rpt-dominant').textContent = (d.dominant_emotion || '—').toUpperCase();
+            document.getElementById('rpt-dominant').style.color = EMO_COLORS[d.dominant_emotion] || '#daeaf5';
+            document.getElementById('rpt-dominant-lbl').textContent = d.dominant_label || '';
+            document.getElementById('rpt-frames').textContent = (d.total_frames || 0).toLocaleString();
+            document.getElementById('rpt-mood-changes').textContent = (d.mood_changes || 0) + ' mood changes';
+            document.getElementById('rpt-pos').textContent = (d.positive_frames || 0).toLocaleString();
+            document.getElementById('rpt-neg').textContent = (d.negative_frames || 0).toLocaleString();
+            document.getElementById('rpt-conv').textContent = d.conversation_turns || 0;
+            document.getElementById('rpt-conv-sub').textContent =
+                (d.user_messages || 0) + ' you · ' + (d.maitri_messages || 0) + ' Maitri';
+            document.getElementById('rpt-alerts').textContent = d.alert_count || 0;
+
+            // ── PIE CHART ──────────────────────────────────────────────────
+            if (_rptPie) {
+                _rptPie.destroy();
+            }
+            _rptPie = new Chart(document.getElementById('rpt-pie').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: d.pie_labels || [],
+                    datasets: [{
+                        data: d.pie_values || [],
+                        backgroundColor: d.pie_colors || [],
+                        borderColor: '#020c14',
+                        borderWidth: 3,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '62%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#071018',
+                            borderColor: '#163348',
+                            borderWidth: 1,
+                            titleColor: '#00e5ff',
+                            bodyColor: '#daeaf5',
+                            titleFont: {
+                                family: 'Share Tech Mono'
+                            },
+                            callbacks: {
+                                label: function(c) {
+                                    return ' ' + c.label + ': ' + c.raw + ' frames';
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        duration: 900
+                    }
+                }
+            });
+            // Pie legend
+            var pLeg = document.getElementById('rpt-pie-legend');
+            pLeg.innerHTML = '';
+            (d.pie_labels || []).forEach(function(lbl, i) {
+                var cnt = (d.pie_values || [])[i] || 0;
+                var col = (d.pie_colors || [])[i] || '#4a7a90';
+                var pct = d.total_frames ? Math.round(cnt / d.total_frames * 100) : 0;
+                pLeg.innerHTML += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">' +
+                    '<div style="width:10px;height:10px;border-radius:50%;background:' + col + ';flex-shrink:0;box-shadow:0 0 6px ' + col + '44"></div>' +
+                    '<span style="font-family:\'Exo 2\',sans-serif;font-size:.63rem;color:#daeaf5;text-transform:capitalize;">' + lbl + '</span>' +
+                    '<span style="font-family:\'Share Tech Mono\',monospace;font-size:.58rem;color:#4a7a90;margin-left:auto;">' + pct + '%</span>' +
+                    '</div>';
+            });
+
+            // ── BAR CHART ──────────────────────────────────────────────────
+            if (_rptBar) {
+                _rptBar.destroy();
+            }
+            _rptBar = new Chart(document.getElementById('rpt-bar').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: (d.emotion_stats || []).map(function(s) {
+                        return s.emotion;
+                    }),
+                    datasets: [{
+                        label: 'Frames',
+                        data: (d.emotion_stats || []).map(function(s) {
+                            return s.count;
+                        }),
+                        backgroundColor: (d.emotion_stats || []).map(function(s) {
+                            return s.color + 'bb';
+                        }),
+                        borderColor: (d.emotion_stats || []).map(function(s) {
+                            return s.color;
+                        }),
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#071018',
+                            borderColor: '#163348',
+                            borderWidth: 1,
+                            titleColor: '#00e5ff',
+                            bodyColor: '#daeaf5',
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#4a7a90',
+                                font: {
+                                    family: 'Share Tech Mono',
+                                    size: 10
+                                }
+                            },
+                            grid: {
+                                color: '#0d2535'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#4a7a90',
+                                font: {
+                                    family: 'Share Tech Mono',
+                                    size: 10
+                                }
+                            },
+                            grid: {
+                                color: '#0d2535'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 800
+                    }
+                }
+            });
+
+            // ── TIMELINE CHART ─────────────────────────────────────────────
+            if (_rptTl) {
+                _rptTl.destroy();
+            }
+            var tlColors = (d.timeline_emotions || []).map(function(e) {
+                return EMO_COLORS[e] || '#4a7a90';
+            });
+            _rptTl = new Chart(document.getElementById('rpt-timeline').getContext('2d'), {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Emotion',
+                        data: (d.timeline_labels || []).map(function(x, i) {
+                            return {
+                                x: x,
+                                y: (d.timeline_values || [])[i]
+                            };
+                        }),
+                        pointBackgroundColor: tlColors,
+                        pointBorderColor: 'transparent',
+                        pointRadius: 3,
+                        showLine: true,
+                        borderColor: '#163348',
+                        borderWidth: 1,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#071018',
+                            borderColor: '#163348',
+                            borderWidth: 1,
+                            titleColor: '#00e5ff',
+                            bodyColor: '#daeaf5',
+                            callbacks: {
+                                label: function(c) {
+                                    var emos = d.emotion_order || [];
+                                    return ' ' + (emos[c.raw.y] || c.raw.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#4a7a90',
+                                font: {
+                                    size: 9
+                                }
+                            },
+                            grid: {
+                                color: '#0d2535'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Frame',
+                                color: '#4a7a90',
+                                font: {
+                                    size: 9
+                                }
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#4a7a90',
+                                font: {
+                                    family: 'Share Tech Mono',
+                                    size: 9
+                                },
+                                callback: function(v) {
+                                    return (d.emotion_order || [])[v] || '';
+                                },
+                                stepSize: 1
+                            },
+                            grid: {
+                                color: '#0d2535'
+                            },
+                            min: 0,
+                            max: (d.emotion_order || ['', '', '', '', '', '', '']).length - 1,
+                        }
+                    },
+                    animation: {
+                        duration: 600
+                    }
+                }
+            });
+            // Timeline legend
+            var tlLeg = document.getElementById('rpt-timeline-legend');
+            tlLeg.innerHTML = '';
+            Object.keys(EMO_COLORS).forEach(function(e) {
+                tlLeg.innerHTML += '<div style="display:flex;align-items:center;gap:4px;">' +
+                    '<div style="width:8px;height:8px;border-radius:50%;background:' + EMO_COLORS[e] + ';"></div>' +
+                    '<span style="font-size:.58rem;color:#4a7a90;text-transform:capitalize;">' + e + '</span></div>';
+            });
+
+            // ── WELLNESS PER PHASE CHART ───────────────────────────────────
+            if (_rptWell) {
+                _rptWell.destroy();
+            }
+            var segs = d.segments || [];
+            _rptWell = new Chart(document.getElementById('rpt-wellness-chart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: segs.map(function(s) {
+                        return s.label;
+                    }),
+                    datasets: [{
+                        label: 'Wellbeing Score',
+                        data: segs.map(function(s) {
+                            return s.score;
+                        }),
+                        borderColor: '#00ff87',
+                        backgroundColor: 'rgba(0,255,135,.08)',
+                        borderWidth: 2,
+                        pointBackgroundColor: segs.map(function(s) {
+                            return s.score >= 75 ? '#00ff87' : s.score >= 50 ? '#ffc107' : '#ff3355';
+                        }),
+                        pointRadius: 6,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#071018',
+                            borderColor: '#163348',
+                            borderWidth: 1,
+                            titleColor: '#00e5ff',
+                            bodyColor: '#daeaf5',
+                            callbacks: {
+                                label: function(c) {
+                                    return ' Score: ' + c.raw + '/100';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#4a7a90',
+                                font: {
+                                    size: 9
+                                }
+                            },
+                            grid: {
+                                color: '#0d2535'
+                            }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                color: '#4a7a90',
+                                font: {
+                                    size: 9
+                                }
+                            },
+                            grid: {
+                                color: '#0d2535'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 800
+                    }
+                }
+            });
+
+            // ── EMOTION BREAKDOWN BARS ─────────────────────────────────────
+            var ebEl = document.getElementById('rpt-emo-bars');
+            ebEl.innerHTML = '';
+            (d.emotion_stats || []).forEach(function(s) {
+                ebEl.innerHTML +=
+                    '<div class="rpt-emo-bar-row">' +
+                    '<div class="rpt-emo-name" style="text-transform:capitalize;">' + s.emotion + '</div>' +
+                    '<div class="rpt-emo-track"><div class="rpt-emo-fill" style="width:0%;background:' + s.color + '" data-pct="' + s.percent + '"></div></div>' +
+                    '<div class="rpt-emo-pct">' + s.percent + '%</div>' +
+                    '</div>';
+            });
+            setTimeout(function() {
+                document.querySelectorAll('.rpt-emo-fill').forEach(function(el) {
+                    el.style.width = el.getAttribute('data-pct') + '%';
+                });
+            }, 300);
+
+            // ── PHASES ─────────────────────────────────────────────────────
+            var phEl = document.getElementById('rpt-phases');
+            phEl.innerHTML = '';
+            (d.segments || []).forEach(function(seg) {
+                var sc = seg.score;
+                var sCol = sc >= 75 ? '#00ff87' : sc >= 50 ? '#ffc107' : '#ff3355';
+                phEl.innerHTML +=
+                    '<div class="rpt-phase-card" style="border-left:3px solid ' + seg.color + '">' +
+                    '<div style="font-family:\'Orbitron\',monospace;font-size:.55rem;color:#4a7a90;letter-spacing:.08em;">' + seg.label.toUpperCase() + '</div>' +
+                    '<div style="font-family:\'Exo 2\',sans-serif;font-size:1rem;font-weight:700;color:' + seg.color + ';margin:4px 0;text-transform:capitalize;">' + seg.dominant + '</div>' +
+                    '<div style="font-family:\'Share Tech Mono\',monospace;font-size:.55rem;color:' + sCol + ';">Score: ' + sc + '/100</div>' +
+                    '<div style="font-family:\'Exo 2\',sans-serif;font-size:.55rem;color:#4a7a90;margin-top:4px;">' + seg.frames + ' frames</div>' +
+                    '</div>';
+            });
+
+            // ── STREAKS ────────────────────────────────────────────────────
+            var strEl = document.getElementById('rpt-streaks');
+            var sk = d.streaks || {};
+            strEl.innerHTML =
+                '<div class="rpt-streak-row">' +
+                '<span style="font-size:1.1rem">💚</span>' +
+                '<div><div style="font-size:.7rem;color:#00ff87;font-weight:600;">Longest Positive Streak</div>' +
+                '<div style="font-size:.62rem;color:#4a7a90;">' + (sk.longest_positive_streak || 0) + ' consecutive frames of positive emotion</div></div>' +
+                '</div>' +
+                '<div class="rpt-streak-row">' +
+                '<span style="font-size:1.1rem">❤️</span>' +
+                '<div><div style="font-size:.7rem;color:#ff3355;font-weight:600;">Longest Negative Streak</div>' +
+                '<div style="font-size:.62rem;color:#4a7a90;">' + (sk.longest_negative_streak || 0) + ' consecutive frames of negative emotion</div></div>' +
+                '</div>' +
+                '<div class="rpt-streak-row">' +
+                '<span style="font-size:1.1rem">🔄</span>' +
+                '<div><div style="font-size:.7rem;color:#ffc107;font-weight:600;">Mood Changes</div>' +
+                '<div style="font-size:.62rem;color:#4a7a90;">' + (d.mood_changes || 0) + ' emotion transitions detected</div></div>' +
+                '</div>';
+
+            // ── SESSION META ───────────────────────────────────────────────
+            var meta = d.session_meta || {};
+            var metaRows = [
+                ['Session ID', (d.session_id || '—').substring(0, 12) + '...'],
+                ['Started At', (meta.started_at || '—').replace('T', ' ').substring(0, 19)],
+                ['Generated At', d.generated_at ? d.generated_at.replace('T', ' ').substring(0, 19) : '—'],
+                ['Total Frames', (meta.frame_count || 0).toLocaleString()],
+                ['Detection Avg', (meta.last_detection_ms || 0) + ' ms'],
+                ['AI Provider', (meta.ai_provider || '—').toUpperCase()],
+                ['Session Status', (meta.status || '—').toUpperCase()],
+                ['Fatigue Level', meta.fatigue || '—'],
+                ['Behaviour', meta.behavior || '—'],
+                ['Focus State', meta.focus || '—'],
+            ];
+            var metEl = document.getElementById('rpt-meta');
+            metEl.innerHTML = metaRows.map(function(row) {
+                return '<div class="rpt-meta-row"><span class="rpt-meta-k">' + row[0] + '</span><span class="rpt-meta-v">' + row[1] + '</span></div>';
+            }).join('');
+
+            // ── CONVERSATION ───────────────────────────────────────────────
+            var convEl = document.getElementById('rpt-conversation');
+            convEl.innerHTML = '';
+            var convSample = d.conversation_sample || [];
+            if (!convSample.length) {
+                convEl.innerHTML = '<div style="color:#4a7a90;font-size:.62rem;">No conversation recorded.</div>';
+            } else {
+                convSample.forEach(function(turn) {
+                    var isUser = turn.role === 'user';
+                    var wrap = document.createElement('div');
+                    wrap.style.display = 'flex';
+                    wrap.style.flexDirection = 'column';
+                    wrap.style.alignItems = isUser ? 'flex-end' : 'flex-start';
+                    var ts = (turn.ts || '').replace('T', ' ').substring(11, 19);
+                    wrap.innerHTML =
+                        '<div class="rpt-chat-role" style="text-align:' + (isUser ? 'right' : 'left') + ';">' +
+                        (isUser ? '🧑 YOU' : '🌸 MAITRI') + (ts ? '  ' + ts : '') +
+                        '</div>' +
+                        '<div class="rpt-chat-bubble ' + (isUser ? 'rpt-chat-user' : 'rpt-chat-maitri') + '">' +
+                        escHtml(turn.text || '') + '</div>';
+                    convEl.appendChild(wrap);
+                });
+            }
+
+            // ── ALERTS ─────────────────────────────────────────────────────
+            var aEl = document.getElementById('rpt-alert-hist');
+            var alerts = d.alerts || [];
+            if (!alerts.length) {
+                aEl.innerHTML = '<div style="color:#4a7a90;font-size:.62rem;">No alerts during this session. Great job! 💚</div>';
+            } else {
+                aEl.innerHTML = alerts.map(function(a) {
+                    var col = a.alert && a.alert.indexOf('CRITICAL') >= 0 ? '#ff3355' :
+                        a.alert && a.alert.indexOf('WARNING') >= 0 ? '#ffc107' : '#00e5ff';
+                    return '<div class="rpt-alert-item">' +
+                        '<div style="width:8px;height:8px;border-radius:50%;background:' + col + ';margin-top:3px;flex-shrink:0;box-shadow:0 0 6px ' + col + '66;"></div>' +
+                        '<div><div style="color:' + col + ';font-size:.62rem;font-weight:600;">' + (a.alert || '') + '</div>' +
+                        '<div style="color:#4a7a90;font-size:.58rem;">Frame ' + (a.frame || '?') + ' · ' + (a.ts || '').replace('T', ' ').substring(0, 19) + '</div></div>' +
+                        '</div>';
+                }).join('');
+            }
+
+            // ── RAW JSON ───────────────────────────────────────────────────
+            var rawClean = Object.assign({}, d);
+            delete rawClean.timeline_labels;
+            delete rawClean.timeline_values;
+            delete rawClean.timeline_emotions;
+            delete rawClean.conversation_sample;
+            document.getElementById('rpt-raw').textContent = JSON.stringify(rawClean, null, 2);
+        }
+
+        function escHtml(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
 
         document.getElementById('btn-recover').addEventListener('click', function() {
             recoverSession();
