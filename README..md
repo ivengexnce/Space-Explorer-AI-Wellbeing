@@ -436,7 +436,7 @@ git push origin feature/AmazingFeature
 
 | Name | Roles |
 |------|-------|
-| **Meet Maru** — Roll No. 38 | Full Stack · AI Integration · Backend · Database · Frontend · UI/UX |
+| **Meet Maru** | Full Stack · AI Integration · Backend · Database · Frontend · UI/UX |
 
 🏫 **Institution** — Viva Institute of Technology, Mumbai
 🏆 **Event** — Ingenious
