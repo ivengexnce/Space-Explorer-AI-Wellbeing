@@ -1,0 +1,923 @@
+/* ========== THEME & RESET ========== */
+
+:root {
+    --accent: #3b82f6;
+    --accent-glow: rgba(59, 130, 246, 0.4);
+    --glass: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --text-main: #ffffff;
+    --text-dim: rgba(255, 255, 255, 0.6);
+    --font-fancy: 'Orbitron', sans-serif;
+    --ease: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    color: var(--text-main);
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ========== BACKGROUND & NAV ========== */
+
+#bg-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -2;
+}
+
+.video-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(5, 10, 25, 0.65);
+    height: 100%;
+    backdrop-filter: blur(10px);
+    z-index: -1;
+    opacity: 0.8;
+}
+
+
+/* ========== AUTH BOX (PIXEL PERFECT) ========== */
+
+.auth-hero {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 200px 20px 80px;
+    /* ⬅ increased top spacing */
+}
+
+.auth-box {
+    background: var(--glass);
+    backdrop-filter: blur(40px) saturate(150%);
+    border: 1px solid var(--glass-border);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 50px;
+    border-radius: 40px;
+    width: 100%;
+    max-width: 500px;
+    position: center;
+    overflow: hidden;
+    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.7);
+}
+
+.auth-sheen {
+    position: absolute;
+    top: -50%;
+    left: -150%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    transform: rotate(35deg);
+    pointer-events: none;
+    animation: sheenSweep 7s infinite;
+}
+
+@keyframes sheenSweep {
+    0% {
+        left: -150%
+    }
+    15% {
+        left: 100%
+    }
+    100% {
+        left: 100%
+    }
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 35px;
+    text-wrap: wrap;
+}
+
+.gate-text {
+    font-family: var(--font-fancy);
+    font-size: 0.6rem;
+    letter-spacing: 5px;
+    color: var(--accent);
+}
+
+.auth-header h2 {
+    font-family: var(--font-fancy);
+    font-size: 2rem;
+    margin: 10px 0;
+}
+
+.gradient-text {
+    background: linear-gradient(90deg, #60a5fa, #a855f7);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+
+/* INPUTS */
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.input-group {
+    position: relative;
+}
+
+.input-group i {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    opacity: 0.7;
+}
+
+.input-group input,
+.input-group select {
+    width: 100%;
+    height: 58px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    color: #ffffff !important;
+    padding: 0 20px 0 55px;
+    outline: none;
+    transition: 0.3s;
+}
+
+.input-group input:focus {
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+
+/* PHONE ROW */
+
+.phone-row {
+    display: flex;
+    gap: 10px;
+}
+
+
+/* Optimized Country Code Selection */
+
+.country-code select {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color-scheme: dark;
+    /* Modern fix for dark system UI */
+    cursor: pointer;
+    border: none;
+    outline: none;
+    width: 100%;
+    height: 100%;
+    border-radius: 16px;
+    padding: 0 15px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    /* This removes the default browser styling that causes the white box */
+    appearance: none;
+    -webkit-appearance: none;
+    /* Custom Arrow SVG so it never turns black */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: calc(100% - 12px) center;
+}
+
+
+/* Hard-fix for the 'White Box' list issue across all browsers */
+
+.country-code select option {
+    background-color: #0b0f1a !important;
+    /* Forces dark background on the list */
+    color: #ffffff !important;
+    padding: 10px;
+}
+
+
+/* Ensure the container is flex-balanced */
+
+.phone-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.country-code {
+    flex: 0.35;
+    /* Adjust this to make the country box wider or narrower */
+    height: 58px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.phone-number {
+    flex: 0.8;
+}
+
+.auth-btn {
+    height: 60px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    font-family: var(--font-fancy);
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: 0.4s var(--ease);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.auth-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px var(--accent-glow);
+    filter: brightness(1.1);
+}
+
+
+/* SOCIALS */
+
+.social-divider {
+    text-align: center;
+    margin: 30px 0 20px;
+    position: relative;
+}
+
+.social-divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+}
+
+.social-divider span {
+    position: relative;
+    z-index: 2;
+    padding: 0 15px;
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+}
+
+.social-grid {
+    display: flex;
+    gap: 12px;
+}
+
+.social-btn {
+    flex: 1;
+    height: 52px;
+    border-radius: 14px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.03);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.social-btn.google {
+    background: white;
+    color: black;
+}
+
+.social-btn.facebook {
+    background: #1877f2;
+}
+
+.switch-text {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    text-wrap: wrap;
+}
+
+.switch-text a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.switch-text p {
+    color: var(--text-main);
+    font-size: 15px;
+}
+
+
+/* ===== ORBITX FOOTER ===== */
+
+.footer {
+    background: linear-gradient(rgba(15, 20, 45, 0.65), rgba(15, 20, 45, 0.65)), url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3");
+    background-size: cover;
+    background-position: center;
+    color: #cfd8ff;
+    padding: 4rem 2rem 2rem;
+    font-family: "Times New Roman", serif;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.05), 0 15px 45px rgba(0, 0, 0, 0.7);
+}
+
+
+/* ✨ subtle stars overlay */
+
+.footer::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 70% 60%, #fff, transparent), radial-gradient(1px 1px at 40% 80%, #fff, transparent), radial-gradient(1px 1px at 80% 20%, #fff, transparent);
+    opacity: 0.25;
+    pointer-events: none;
+}
+
+
+/* ===== Layout ===== */
+
+.footer-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 40px;
+    position: relative;
+    z-index: 1;
+}
+
+
+/* ===== Logo ===== */
+
+.footer-logo-img {
+    width: 150px;
+}
+
+.india {
+    width: 20px;
+    margin-left: 4px;
+}
+
+
+/* ===== Sections ===== */
+
+.footer-section {
+    flex: 1 1 220px;
+}
+
+.footer-section h2,
+.footer-section h3 {
+    color: #ffffff;
+    margin-bottom: 1rem;
+    letter-spacing: 0.5px;
+}
+
+.footer-section p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+.hamburger {
+    text-align: right;
+}
+
+
+/* ===== Links ===== */
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.6rem;
+}
+
+.footer-section ul li a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.95rem;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.footer-section ul li a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    width: 0;
+    height: 1px;
+    background: #6cf3ff;
+    transition: width 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+    color: #6cf3ff;
+}
+
+.footer-section ul li a:hover::after {
+    width: 100%;
+}
+
+
+/* ===== Social Icons ===== */
+
+.footer-socials {
+    display: flex;
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+.footer-socials a {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.footer-socials a:hover {
+    transform: translateY(-4px);
+}
+
+.footer-socials a:hover .fa-instagram {
+    color: #e1306c;
+}
+
+.footer-socials a:hover .fa-youtube {
+    color: #ff0000;
+}
+
+.footer-socials a:hover .fa-x-twitter {
+    color: #1da1f2;
+}
+
+.footer-socials a:hover .fa-linkedin-in {
+    color: #0a66c2;
+}
+
+.footer-socials a:hover .fa-facebook-f {
+    color: #0a66c2;
+}
+
+
+/* ===== Newsletter ===== */
+
+.newsletter {
+    display: flex;
+    gap: 0.6rem;
+    margin: 1rem 0;
+}
+
+.newsletter input {
+    flex: 1;
+    padding: 0.6rem 0.8rem;
+    border-radius: 6px;
+    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.newsletter input::placeholder {
+    color: #d6d6d6;
+}
+
+.newsletter input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.newsletter button {
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    border: none;
+    background: linear-gradient(135deg, #6cf3ff, #7b7bff);
+    color: #05070f;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.newsletter button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(108, 243, 255, 0.8);
+}
+
+
+/* ===== Contact ===== */
+
+.footer-contact p {
+    font-size: 0.9rem;
+    margin: 0.3rem 0;
+    opacity: 0.9;
+}
+
+.footer-contact i {
+    color: #6cf3ff;
+    margin-right: 0.4rem;
+}
+
+
+/* ===== Bottom Bar ===== */
+
+.footer-bottom {
+    margin-top: 3rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    font-size: 0.85rem;
+    opacity: 0.85;
+}
+
+.footer-bottom a {
+    color: #6cf3ff;
+    text-decoration: none;
+}
+
+.footer-bottom a:hover {
+    text-decoration: underline;
+}
+
+
+/* ===== Responsive ===== */
+
+@media (max-width: 768px) {
+    .footer {
+        padding: 3rem 1.5rem 2rem;
+    }
+    .newsletter {
+        flex-direction: column;
+    }
+    .newsletter button {
+        width: 100%;
+    }
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100px;
+    /* Increased height to accommodate the logo design */
+    padding: 0 50px;
+    position: relative;
+    z-index: 1000;
+}
+
+
+/* LOGO */
+
+.logo {
+    width: 120px;
+    height: auto;
+    display: block;
+    margin-top: -10px;
+    /* Adjusted to balance the visual weight of the 'O' */
+    padding-top: 0;
+    /* REMOVED the 60px padding that caused the error */
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    /* This aligns logo and search bar vertically */
+    gap: 40px;
+    /* Space between logo and search bar */
+}
+
+
+/* ================= NAV LINKS (MOBILE) ================= */
+
+.nav-links {
+    position: absolute;
+    top: calc(100% + 10px);
+    /* 👈 small gap from nav */
+    right: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 220px;
+    padding: 10px 0;
+    background: rgba(5, 10, 25, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-12px);
+    transition: all 0.35s ease;
+}
+
+.nav-links.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+
+/* LINKS */
+
+.nav-links a {
+    padding: 14px 22px;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    position: relative;
+}
+
+
+/* underline hover */
+
+.nav-links a::after {
+    content: "";
+    position: absolute;
+    left: 20px;
+    bottom: 6px;
+    width: 0;
+    height: 2px;
+    background: var(--accent);
+    transition: width 0.3s ease;
+}
+
+.nav-links a:hover::after {
+    width: 90%;
+}
+
+
+/* ================= HAMBURGER ================= */
+
+.nav-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 10000;
+}
+
+.hamburger span {
+    display: block;
+    width: 28px;
+    height: 3px;
+    background: #ffffff;
+    margin: 5px 0;
+    border-radius: 2px;
+    transition: 0.4s ease;
+}
+
+
+/* ACTIVE STATE (X ICON) */
+
+.nav-toggle.active .hamburger span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+
+.nav-toggle.active .hamburger span:nth-child(2) {
+    opacity: 0;
+    transform: scale(0);
+}
+
+.nav-toggle.active .hamburger span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
+.nav-links.active a:nth-child(4) {
+    transition-delay: 0.26s;
+}
+
+.nav-links.active a:nth-child(5) {
+    transition-delay: 0.32s;
+}
+
+
+/* ================= NAV LINKS ANIMATION ================= */
+
+.nav-links.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+
+/* LINK ENTRY ANIMATION */
+
+.nav-links a {
+    padding: 14px 22px;
+    color: #ffffff;
+    font-weight: 600;
+    text-decoration: none;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: all 0.35s ease;
+}
+
+.nav-links.active a {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.nav-links.active a:nth-child(1) {
+    transition-delay: 0.08s;
+}
+
+.nav-links.active a:nth-child(2) {
+    transition-delay: 0.14s;
+}
+
+.nav-links.active a:nth-child(3) {
+    transition-delay: 0.20s;
+}
+
+.nav-links.active a:nth-child(4) {
+    transition-delay: 0.26s;
+}
+
+.nav-links.active a:nth-child(5) {
+    transition-delay: 0.32s;
+}
+
+
+/* ================= DESKTOP ================= */
+
+@media (min-width: 768px) {
+    .nav-toggle {
+        display: none;
+    }
+    .nav-links {
+        position: static;
+        flex-direction: row;
+        background: none;
+        backdrop-filter: none;
+        box-shadow: none;
+        opacity: 1;
+        pointer-events: auto;
+        transform: none;
+        padding: 0;
+        gap: 26px;
+    }
+    .nav-links a {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+
+/* ================= SEARCH BAR ================= */
+
+.search-container {
+    position: relative;
+    width: 320px;
+}
+
+.search-container input {
+    width: 100%;
+    height: 46px;
+    padding: 0 45px 0 20px;
+    border-radius: 30px;
+    border: 1px solid var(--glass-border);
+    outline: none;
+    background: linear-gradient(rgba(15, 20, 45, 0.65), rgba(15, 20, 45, 0.65)), url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3");
+    background-size: cover;
+    background-position: center;
+    color: #ffffff;
+    font-size: 1rem;
+    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.05), 0 15px 45px rgba(0, 0, 0, 0.7);
+    transition: 0.4s ease;
+}
+
+.search-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.search-container input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.search-container input:focus {
+    box-shadow: 0 0 0 4px rgba(120, 190, 255, 0.18), 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+.search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2px;
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+.search-container::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 42px;
+    background: linear-gradient(120deg, rgba(120, 190, 255, 0.4), rgba(180, 120, 255, 0.3), rgba(120, 255, 220, 0.35));
+    filter: blur(22px);
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 0.4s ease;
+}
+
+.search-container:focus-within::after {
+    opacity: 1;
+}
+
+.search-icon {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 26px;
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+
+/* Responsive fix: If screen is small, you might want to hide search or shrink it */
+
+@media (max-width: 600px) {
+    .search-container {
+        width: 250px;
+        /* Shrinks on mobile so it doesn't overlap */
+    }
+    .nav {
+        padding: 0 20px;
+        /* Reduces side padding on mobile */
+    }
+}
+
+.otp-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.otp-input {
+    flex: 1;
+}
+
+.otp-btn {
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    white-space: nowrap;
+    transition: 0.3s ease;
+}
+
+.otp-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+@media (max-width: 500px) {
+    .otp-row {
+        flex-direction: column;
+    }
+    .otp-btn {
+        width: 100%;
+    }
+}

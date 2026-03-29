@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome | Space Systems</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Orbitron:wght@500&display=swap" rel="stylesheet">
+
+    <style>
+         :root {
+            --primary: #ffffff;
+            --accent: #6cf3ff;
+            --accent-2: #7b7bff;
+            --ease: cubic-bezier(0.4, 0, 0.2, 1);
+            --soft-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            height: 100vh;
+            background: #000;
+            color: var(--primary);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        /* ================= Background Videos ================= */
+        
+        .video-container {
+            position: fixed;
+            inset: 0;
+            z-index: -3;
+            overflow: hidden;
+        }
+        
+        .video-container video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transform: scale(1.05);
+            filter: brightness(1.15) contrast(1.05);
+            transition: opacity 2.2s var(--ease), transform 12s linear;
+        }
+        
+        .video-container video.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+        /* ================= Overlay ================= */
+        
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.55));
+            z-index: -2;
+        }
+        /* ================= Header ================= */
+        
+        .header {
+            position: fixed;
+            top: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        
+        .header img {
+            height: 70px;
+            opacity: 0.95;
+            filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.6));
+        }
+        /* ================= Hero ================= */
+        
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 28px;
+        }
+        
+        .hero-content {
+            max-width: 820px;
+            text-align: center;
+            padding: 72px 80px;
+            background: rgba(255, 255, 255, 0.035);
+            backdrop-filter: blur(16px);
+            border-radius: 22px;
+            box-shadow: var(--soft-shadow);
+            animation: rise 1.3s var(--ease) forwards;
+        }
+        
+        .welcome {
+            font-size: 1rem;
+            letter-spacing: 4px;
+            font-family: 'Times New Roman', Times, serif;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 18px;
+        }
+        
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.3rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            line-height: 1.2;
+            margin-bottom: 26px;
+        }
+        
+        .hero h3 {
+            font-family: 'Times New Roman', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            letter-spacing: 1.6px;
+            margin-bottom: 2px;
+            opacity: 0.95;
+        }
+        
+        .hero p {
+            font-size: 1.10rem;
+            line-height: 1.8;
+            font-family: 'Times New Roman', Times, serif;
+            color: rgba(255, 255, 255, 0.88);
+            margin-bottom: 52px;
+        }
+        
+        .cta {
+            display: inline-block;
+            padding: 16px 52px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-decoration: none;
+            color: #000;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            box-shadow: var(--soft-shadow);
+            transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+        }
+        
+        .cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 32px 90px rgba(0, 0, 0, 0.75);
+        }
+        /* ================= Indian Flag Text ================= */
+        
+        .bharat {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            background: linear-gradient(to right, #FF9933 33%, #FFFFFF 33% 66%, #138808 66%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* ================= Footer ================= */
+        
+        .footer {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            text-align: center;
+        }
+        
+        .footer h3 {
+            font-size: 20px;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            opacity: 1;
+        }
+        /* ================= Animation ================= */
+        
+        @keyframes rise {
+            from {
+                opacity: 0;
+                transform: translateY(28px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* ================= Responsive ================= */
+        
+        @media (max-width: 768px) {
+            .hero-content {
+                padding: 54px 36px;
+            }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            .hero h3 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Background Videos -->
+    <div class="video-container">
+        <video src="/OrbitX/assets/video1.mp4" autoplay muted playsinline></video>
+        <video src="/OrbitX/assets/video2.mp4" muted playsinline></video>
+        <video src="/OrbitX/assets/video3.mp4" muted playsinline></video>
+    </div>
+
+    <div class="overlay"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <img src="/OrbitX/assets/OrbitX.png" alt="OrbitX Logo">
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="welcome">Welcome</div>
+            <h1>Start Exploring Beyond Boundaries</h1>
+            <h3>Shaping the Next Era of Space</h3>
+            <p>
+                Advancing intelligent space systems that enable exploration, sustainability, and humanity’s future beyond Earth.
+            </p>
+            <a href="/OrbitX/home/home.html" class="cta">Enter Space</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <section class="footer">
+        <h3>Made in <span class="bharat">BHARAT</span></h3>
+    </section>
+
+    <script>
+        const videos = document.querySelectorAll('.video-container video');
+        let index = 0;
+
+        videos[index].classList.add('active');
+        videos[index].play();
+
+        setInterval(() => {
+            videos[index].classList.remove('active');
+            videos[index].pause();
+            videos[index].currentTime = 0;
+
+            index = (index + 1) % videos.length;
+
+            videos[index].classList.add('active');
+            videos[index].play();
+        }, 11000);
+    </script>
+
+</body>
+
+</html>

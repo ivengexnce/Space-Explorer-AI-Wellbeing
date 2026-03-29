@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OrbitX | Join the Crew</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Orbitron:wght@400;700&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <link rel="stylesheet" href="signup.css" />
+</head>
+
+<body>
+
+    <div class="video-overlay"></div>
+    <video autoplay muted loop id="bg-video">
+        <source src="/OrbitX/assets/video1.mp4" type="video/mp4">
+    </video>
+    <!-- ===== HEADER ===== -->
+
+    <nav class="nav container">
+        <div class="nav-left">
+            <img src="/OrbitX/assets/Otrans8k2.png" alt="OrbitX Logo" class="logo">
+
+            <div class="search-container">
+                <input type="text" placeholder="Search for exploration..." />
+                <span class="search-icon">⌕</span>
+            </div>
+        </div>
+
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </span>
+    </button>
+
+        <div class="nav-links" id="navLinks">
+            <a href="../home/home.html" class="active">Home</a>
+            <a href="../explore/explore.html">Explore</a>
+            <a href="#">Missions</a>
+            <a href="#">Technology</a>
+            <a href="../auth/login.html">Login</a>
+        </div>
+    </nav>
+
+    <main class="auth-hero">
+        <div class="auth-box">
+            <div class="auth-sheen"></div>
+
+            <div class="auth-header">
+                <span class="gate-text">CITIZEN ENLISTMENT</span>
+                <h2>Begin Your <span class="gradient-text">Odyssey</span></h2>
+                <p>Register your credentials for the next deep space launch.</p>
+            </div>
+
+            <form action="signup.php" method="POST" class="auth-form">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" name="username" placeholder="Choose Username" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-user-astronaut"></i>
+                    <input type="text" name="fullName" placeholder="Full Name" required />
+                </div>
+
+                <div class="input-group">
+                    <i class="fas fa-satellite-dish"></i>
+                    <input type="email" name="email" placeholder="Communication Hub (Email)" required />
+                </div>
+
+                <div class="phone-row">
+                    <div class="input-group country-code">
+                        <select name="countryCode">
+                <option value="+91">+91 IN</option>
+                <option value="+69">+69 Jeffrey Island</option>
+                <option value="+1">+1 US</option>
+                <option value="+44">+44 UK</option>
+            </select>
+                    </div>
+                    <div class="input-group phone-number">
+                        <i class="fas fa-mobile-alt"></i>
+                        <input type="tel" name="phone" placeholder="Uplink Frequency" required />
+                    </div>
+                </div>
+
+                <div class="otp-row">
+                    <div class="input-group otp-input">
+                        <i class="fas fa-sms"></i>
+                        <input type="text" name="otp" placeholder="Enter 6-digit OTP" pattern="\d{6}" maxlength="6" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required />
+                    </div>
+
+                    <button type="button" class="otp-btn">Get OTP</button>
+                </div>
+
+                <div class="input-group">
+                    <i class="fas fa-fingerprint"></i>
+                    <input type="password" name="password" placeholder="Enter Password" required />
+                </div>
+
+                <button type="submit" class="auth-btn">
+        <span>INITIALIZE LAUNCH</span>
+        <i class="fas fa-rocket"></i>
+    </button>
+
+            </form>
+
+            <p id="signupMessage" style="color:red; margin-top:10px;"></p>
+            <div class="social-area">
+                <div class="social-divider">
+                    <span>OR CONNECT VIA</span>
+                </div>
+                <div class="social-grid">
+                    <button class="social-btn google">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google">
+                        Google
+                    </button>
+                    <button class="social-btn facebook">
+                        <i class="fab fa-facebook-f"></i>
+                        Facebook
+                    </button>
+                </div>
+            </div>
+
+            <p class="switch-text">
+                Already enlisted? <a href="../auth/login.html">Return to Command Center</a>
+            </p>
+        </div>
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="footer-container">
+            <!-- Brand Section -->
+            <div class="brand"> <img src="/OrbitX/assets/OrbitX.png" alt="OrbitX Logo" class="footer-logo-img">
+                <p> A Web Platform for Space Technology Exploration.<br> Discover planets, missions, and the future of space. </p>
+                <div class="footer-socials"><a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    </a> <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="X (Twitter)"><i class="fab fa-x-twitter"></i>
+                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <!-- Explore -->
+            <div class="footer-section">
+                <h3>Explore</h3>
+                <ul>
+                    <li><a href="#">Solar System</a></li>
+                    <li><a href="#">Planets</a></li>
+                    <li><a href="#">Space Missions</a></li>
+                    <li><a href="#">Space Technology</a></li>
+                    <li><a href="#">Interactive 3D Space</a></li>
+                </ul>
+            </div>
+            <!-- Learn -->
+            <div class="footer-section">
+                <h3>Learn</h3>
+                <ul>
+                    <li><a href="#">Black Holes</a></li>
+                    <li><a href="#">Stars & Galaxies</a></li>
+                    <li><a href="#">Astrophysics Basics</a></li>
+                    <li><a href="#">Space News</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+            <!-- Stay Connected -->
+            <div class="footer-section">
+                <h3>Stay Connected</h3>
+                <p>Get space updates, discoveries, and mission alerts.</p>
+                <form class="newsletter"> <input type="email" placeholder="Enter your email" required /> <button type="submit">Join OrbitX</button> </form>
+                <div class="footer-contact">
+                    <p><i class="fas fa-envelope"></i> contact@orbitx.space</p>
+                    <div location>
+                        <p><i class="fas fa-map-marker-alt"></i> Mumbai, Maharashtra • Bharat <img src="/assets/bharat.png" class="india"> </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Bottom -->
+        <div class="footer-bottom">
+            <p> © 2026 OrbitX. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a> </p>
+        </div>
+    </footer>
+
+    <script>
+        const otpInput = document.getElementById('otpInput');
+
+        otpInput.addEventListener('input', function(e) {
+            // 1. Replace any non-numeric character with an empty string
+            this.value = this.value.replace(/[^0-9]/g, '');
+
+            // 2. Double-check length (safety for paste actions)
+            if (this.value.length > 6) {
+                this.value = this.value.slice(0, 6);
+            }
+        });
+        const navToggle = document.getElementById('navToggle');
+        const navLinks = document.getElementById('navLinks');
+
+        navToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            navToggle.classList.toggle('active');
+        });
+    </script>
+</body>
+
+</html>

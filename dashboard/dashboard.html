@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrbitX Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="dashboard">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo"><img src="/OrbitX/assets/Ok8.png" alt="OrbitX Logo" class="logo"></div>
+
+            <nav>
+                <a href="../home/home.html" class="nav-btn" data-tooltip="Home">
+                    <i class="fa-solid fa-house"></i>
+                </a>
+                <a href="../EXPLORE/EXPLORE.html" class="nav-btn" data-tooltip="Explore">
+                    <i class="fa-solid fa-compass"></i>
+                </a>
+                <button class="nav-btn active" data-page="dashboard" data-tooltip="Dashboard">
+                <i class="fa-solid fa-grip"></i>
+            </button>
+                <button class="nav-btn" data-page="achievements" data-tooltip="Achievements">
+                <i class="fa-solid fa-star"></i>
+            </button>
+                <button class="nav-btn" data-page="projects" data-tooltip="Projects">
+                <i class="fa-solid fa-folder"></i>
+            </button>
+                <button class="nav-btn" data-page="messages" data-tooltip="Messages">
+                <i class="fa-solid fa-message"></i>
+            </button>
+                <button class="nav-btn" data-page="reports" data-tooltip="Reports">
+                <i class="fa-solid fa-file-lines"></i>
+            </button>
+                <button class="nav-btn" data-page="analytics" data-tooltip="Analytics">
+                <i class="fa-solid fa-chart-simple"></i>
+            </button>
+                <button class="nav-btn" data-page="documents" data-tooltip="Documents">
+                <i class="fa-solid fa-file"></i>
+            </button>
+                <button class="nav-btn" data-page="settings" data-tooltip="Settings">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+            </nav>
+
+            <!-- Logout at bottom -->
+            <button class="nav-btn logout-btn" id="logoutBtn" data-tooltip="Logout" style="margin-top:auto;">
+            <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main">
+
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="circle-btn" id="sidebarToggle" title="Toggle Sidebar">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                </div>
+
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Search missions, reports..." id="globalSearch">
+                </div>
+
+                <a href="../MAITRI_AI/MAITRI_AI.html" class="nav-btn_AI" data-tooltip="Maitri AI Assistant" style="margin:auto;">
+                    <i class="fa-solid fa-robot"></i>
+                </a>
+
+                <div class="top-actions">
+                    <button class="circle-btn" id="notifBtn" title="Notifications">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="badge">3</span>
+                </button>
+                    <button class="circle-btn" title="Messages">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span class="badge">5</span>
+                </button>
+                </div>
+
+                <div class="profile" id="profileBtn">
+                    <img src="https://i.pravatar.cc/40" id="profileAvatar" alt="Profile">
+                    <div class="profile-info">
+                        <strong id="profileName">Explorer</strong>
+                        <span id="profileEmail">user@orbitx.space</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- PROFILE DROPDOWN -->
+                <div class="dropdown" id="dropdown">
+                    <div class="dropdown-user">
+                        <img src="https://i.pravatar.cc/40" id="dropdownAvatar" alt="Avatar">
+                        <div>
+                            <strong id="dropdownName">Explorer</strong>
+                            <span id="dropdownEmail">user@orbitx.space</span>
+                        </div>
+                    </div>
+                    <hr class="dropdown-divider">
+                    <button class="dropdown-item" id="editProfileBtn">
+                    <i class="fa-regular fa-user"></i> Edit Profile
+                </button>
+                    <div class="dropdown-item">
+                        <i class="fa-solid fa-moon"></i> Dark Mode
+                        <label class="switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider"></span>
+                    </label>
+                    </div>
+                    <button class="dropdown-item" id="settingsDropBtn">
+                    <i class="fa-solid fa-gear"></i> Settings
+                </button>
+                    <hr class="dropdown-divider">
+                    <button class="dropdown-item danger" id="logoutDropBtn">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+                </div>
+            </header>
+
+            <!-- CONTENT -->
+            <div class="content">
+
+                <!-- ===== DASHBOARD PAGE ===== -->
+                <section class="page active" id="dashboard">
+                    <div class="page-header">
+                        <div>
+                            <h1>Mission Control 🚀</h1>
+                            <p>Real-time monitoring of global space exploration programs.</p>
+                        </div>
+                        <div class="date-badge">
+                            <i class="fa-regular fa-calendar"></i>
+                            <span id="currentDate"></span>
+                        </div>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background:#fff3eb;color:#ff6b2c"><i class="fa-solid fa-rocket"></i></div>
+                            <div>
+                                <h3>Active Missions</h3>
+                                <p class="stat-num">12</p>
+                                <span>NASA, ESA, ISRO</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background:#ebf5ff;color:#3b82f6"><i class="fa-solid fa-satellite"></i></div>
+                            <div>
+                                <h3>Satellites Online</h3>
+                                <p class="stat-num">248</p>
+                                <span>Earth Orbit</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background:#f0ebff;color:#8b5cf6"><i class="fa-solid fa-binoculars"></i></div>
+                            <div>
+                                <h3>Space Telescopes</h3>
+                                <p class="stat-num">6</p>
+                                <span>Deep space observation</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background:#ebfff5;color:#10b981"><i class="fa-solid fa-earth-americas"></i></div>
+                            <div>
+                                <h3>Planets Studied</h3>
+                                <p class="stat-num">8</p>
+                                <span>Solar System</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-row">
+                        <div class="chart-card">
+                            <h2>Mission Data Collected</h2>
+                            <canvas id="missionChart" height="100"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h2>Mission Distribution</h2>
+                            <canvas id="agencyChart" height="20"></canvas>
+                        </div>
+                    </div>
+
+                    <h2 class="section-title">Recent Activity</h2>
+                    <div class="activity">
+                        <div class="activity-item"><span class="activity-icon">🚀</span>
+                            <div><strong>Artemis III</strong>
+                                <p>Preparing for human lunar landing.</p>
+                            </div><span class="activity-time">2h ago</span></div>
+                        <div class="activity-item"><span class="activity-icon">🛰</span>
+                            <div><strong>Weather Satellite</strong>
+                                <p>New satellite deployed into orbit.</p>
+                            </div><span class="activity-time">5h ago</span></div>
+                        <div class="activity-item"><span class="activity-icon">🔭</span>
+                            <div><strong>James Webb</strong>
+                                <p>Detected early galaxy cluster.</p>
+                            </div><span class="activity-time">1d ago</span></div>
+                        <div class="activity-item"><span class="activity-icon">☄️</span>
+                            <div><strong>Asteroid 2026-QZ</strong>
+                                <p>Passed near Earth safely.</p>
+                            </div><span class="activity-time">2d ago</span></div>
+                    </div>
+
+                    <h2 class="section-title">Solar System Overview</h2>
+                    <div class="planet-grid">
+                        <div class="planet-card">
+                            <h3>☿ Mercury</h3>
+                            <p>Closest to the Sun, extreme temperatures.</p>
+                        </div>
+                        <div class="planet-card">
+                            <h3>♀ Venus</h3>
+                            <p>Hottest planet with dense greenhouse atmosphere.</p>
+                        </div>
+                        <div class="planet-card">
+                            <h3>🌍 Earth</h3>
+                            <p>The only known planet supporting life.</p>
+                        </div>
+                        <div class="planet-card">
+                            <h3>♂ Mars</h3>
+                            <p>Target of rover missions searching for life.</p>
+                        </div>
+                        <div class="planet-card">
+                            <h3>♃ Jupiter</h3>
+                            <p>Largest gas giant with the Great Red Spot.</p>
+                        </div>
+                        <div class="planet-card">
+                            <h3>♄ Saturn</h3>
+                            <p>Famous for its spectacular ring system.</p>
+                        </div>
+                        <div class="planet-card">
+                            <h3>⛢ Uranus</h3>
+                            <p>Ice giant that rotates on its side.</p>
+                        </div>
+                        <div class="planet-card">
+                            <h3>♆ Neptune</h3>
+                            <p>Farthest planet with supersonic winds.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== ACHIEVEMENTS PAGE ===== -->
+                <section class="page" id="achievements">
+                    <h1>Achievements 🌟</h1>
+                    <p>Your space exploration milestones.</p>
+                    <div class="achievements-grid" style="margin-top:24px;">
+                        <div class="achievement-card unlocked">
+                            <div class="achievement-icon">🚀</div>
+                            <h3>First Launch</h3>
+                            <p>Logged into OrbitX for the first time.</p>
+                            <span class="badge-label">Unlocked</span>
+                        </div>
+                        <div class="achievement-card unlocked">
+                            <div class="achievement-icon">🌍</div>
+                            <h3>Earth Observer</h3>
+                            <p>Explored all 8 planets in the database.</p>
+                            <span class="badge-label">Unlocked</span>
+                        </div>
+                        <div class="achievement-card">
+                            <div class="achievement-icon">🔭</div>
+                            <h3>Deep Space Scout</h3>
+                            <p>Read 10 scientific reports.</p>
+                            <span class="badge-label locked-badge">Locked</span>
+                        </div>
+                        <div class="achievement-card">
+                            <div class="achievement-icon">⭐</div>
+                            <h3>Star Gazer</h3>
+                            <p>Complete the space quiz with a perfect score.</p>
+                            <span class="badge-label locked-badge">Locked</span>
+                        </div>
+                        <div class="achievement-card">
+                            <div class="achievement-icon">🛸</div>
+                            <h3>Mission Commander</h3>
+                            <p>View all active missions.</p>
+                            <span class="badge-label locked-badge">Locked</span>
+                        </div>
+                        <div class="achievement-card">
+                            <div class="achievement-icon">🌌</div>
+                            <h3>Galaxy Brain</h3>
+                            <p>Explore all galaxy categories.</p>
+                            <span class="badge-label locked-badge">Locked</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== PROJECTS / MISSIONS ===== -->
+                <section class="page" id="projects">
+                    <h1>Space Missions 🛸</h1>
+                    <p>Current and historic exploration missions.</p>
+                    <div class="mission-card">
+                        <div class="mission-status active-status"></div>
+                        <div>
+                            <h3>Mars Rover Expedition</h3>
+                            <p>Analyzing Martian soil samples and searching for microbial life.</p>
+                            <span class="mission-tag">ACTIVE</span>
+                        </div>
+                    </div>
+                    <div class="mission-card">
+                        <div class="mission-status active-status"></div>
+                        <div>
+                            <h3>Artemis Lunar Program</h3>
+                            <p>NASA-led mission to establish sustainable human presence on the Moon.</p>
+                            <span class="mission-tag">ACTIVE</span>
+                        </div>
+                    </div>
+                    <div class="mission-card">
+                        <div class="mission-status planned-status"></div>
+                        <div>
+                            <h3>Europa Clipper</h3>
+                            <p>Investigating Jupiter's moon Europa for signs of a subsurface ocean.</p>
+                            <span class="mission-tag planned-tag">PLANNED</span>
+                        </div>
+                    </div>
+                    <div class="mission-card">
+                        <div class="mission-status complete-status"></div>
+                        <div>
+                            <h3>Voyager Interstellar Mission</h3>
+                            <p>Exploring interstellar space beyond the heliosphere since 1977.</p>
+                            <span class="mission-tag complete-tag">ONGOING</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== MESSAGES ===== -->
+                <section class="page" id="messages">
+                    <h1>Mission Communications 📡</h1>
+                    <p>Latest transmissions from spacecraft and satellites.</p>
+                    <div class="message"><span class="msg-icon">📡</span>
+                        <div><strong>Mars Rover</strong>
+                            <p>Soil composition data successfully transmitted.</p>
+                        </div><span class="msg-time">10:32 AM</span></div>
+                    <div class="message"><span class="msg-icon">📡</span>
+                        <div><strong>Artemis Base Camp</strong>
+                            <p>Habitat systems functioning normally.</p>
+                        </div><span class="msg-time">09:15 AM</span></div>
+                    <div class="message"><span class="msg-icon">📡</span>
+                        <div><strong>Satellite ORX-12</strong>
+                            <p>Solar panel deployment complete.</p>
+                        </div><span class="msg-time">Yesterday</span></div>
+                    <div class="message"><span class="msg-icon">📡</span>
+                        <div><strong>Deep Space Telescope</strong>
+                            <p>New nebula images captured and transmitted.</p>
+                        </div><span class="msg-time">2d ago</span></div>
+                </section>
+
+                <!-- ===== REPORTS ===== -->
+                <section class="page" id="reports">
+                    <h1>Scientific Reports 📄</h1>
+                    <p>Research findings from space exploration missions.</p>
+                    <div class="report"><i class="fa-solid fa-file-pdf" style="color:#ef4444;font-size:20px;"></i>
+                        <div><strong>Jupiter Atmospheric Dynamics Study</strong>
+                            <p>Comprehensive analysis of cloud band formations.</p>
+                        </div><button class="dl-btn">Download</button></div>
+                    <div class="report"><i class="fa-solid fa-file-pdf" style="color:#ef4444;font-size:20px;"></i>
+                        <div><strong>Evidence of Frozen Water on Mars Surface</strong>
+                            <p>Spectroscopic data from Mars Reconnaissance Orbiter.</p>
+                        </div><button class="dl-btn">Download</button></div>
+                    <div class="report"><i class="fa-solid fa-file-pdf" style="color:#ef4444;font-size:20px;"></i>
+                        <div><strong>Saturn Ring Particle Composition</strong>
+                            <p>Cassini mission legacy data analysis.</p>
+                        </div><button class="dl-btn">Download</button></div>
+                    <div class="report"><i class="fa-solid fa-file-pdf" style="color:#ef4444;font-size:20px;"></i>
+                        <div><strong>Asteroid Belt Mineral Survey</strong>
+                            <p>Resource mapping for future mining missions.</p>
+                        </div><button class="dl-btn">Download</button></div>
+                </section>
+
+                <!-- ===== ANALYTICS ===== -->
+                <section class="page" id="analytics">
+                    <h1>Mission Analytics 📊</h1>
+                    <p>Performance statistics from global space programs.</p>
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background:#fff3eb;color:#ff6b2c"><i class="fa-solid fa-check-circle"></i></div>
+                            <div>
+                                <h3>Total Missions</h3>
+                                <p class="stat-num">53</p><span>Since 2000</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background:#ebfff5;color:#10b981"><i class="fa-solid fa-rocket"></i></div>
+                            <div>
+                                <h3>Launch Success Rate</h3>
+                                <p class="stat-num">94%</p><span>Global average</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background:#ebf5ff;color:#3b82f6"><i class="fa-solid fa-database"></i></div>
+                            <div>
+                                <h3>Data Collected</h3>
+                                <p class="stat-num">4.2PB</p><span>Scientific archives</span></div>
+                        </div>
+                    </div>
+                    <div class="chart-row" style="margin-top:30px;">
+                        <div class="chart-card">
+                            <h2>Launch History (2020–2026)</h2>
+                            <canvas id="launchChart" height="120"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== DOCUMENTS ===== -->
+                <section class="page" id="documents">
+                    <h1>Documents & Archives 📂</h1>
+                    <p>Access mission files and research papers.</p>
+                    <div class="doc"><i class="fa-solid fa-folder" style="color:#f59e0b;font-size:20px;"></i>
+                        <div><strong>Mission Logs</strong>
+                            <p>Complete logs from all active missions.</p>
+                        </div><span class="doc-size">4.2 GB</span></div>
+                    <div class="doc"><i class="fa-solid fa-folder" style="color:#f59e0b;font-size:20px;"></i>
+                        <div><strong>Satellite Telemetry Data</strong>
+                            <p>Raw telemetry streams from 248 satellites.</p>
+                        </div><span class="doc-size">12.1 GB</span></div>
+                    <div class="doc"><i class="fa-solid fa-folder" style="color:#f59e0b;font-size:20px;"></i>
+                        <div><strong>Planetary Research Papers</strong>
+                            <p>Peer-reviewed publications 2000–2026.</p>
+                        </div><span class="doc-size">856 MB</span></div>
+                    <div class="doc"><i class="fa-solid fa-folder" style="color:#f59e0b;font-size:20px;"></i>
+                        <div><strong>Launch Schedules</strong>
+                            <p>Upcoming mission launch timetables.</p>
+                        </div><span class="doc-size">2.3 MB</span></div>
+                    <div class="doc"><i class="fa-solid fa-folder" style="color:#f59e0b;font-size:20px;"></i>
+                        <div><strong>Astronaut Training Manuals</strong>
+                            <p>Training materials for upcoming crews.</p>
+                        </div><span class="doc-size">340 MB</span></div>
+                </section>
+
+                <!-- ===== SETTINGS PAGE ===== -->
+                <section class="page" id="settings">
+                    <h1>Settings </h1>
+                    <p>Manage your account and preferences.</p>
+
+                    <div class="settings-group">
+                        <h2>Appearance</h2>
+                        <div class="settings-row">
+                            <span><i class="fa-solid fa-moon"></i> Dark Mode</span>
+                            <label class="switch">
+                            <input type="checkbox" id="themeToggle2">
+                            <span class="slider"></span>
+                        </label>
+                        </div>
+                        <div class="settings-row">
+                            <span><i class="fa-solid fa-text-height"></i> Compact View</span>
+                            <label class="switch">
+                            <input type="checkbox" id="compactToggle">
+                            <span class="slider"></span>
+                        </label>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h2>Notifications</h2>
+                        <div class="settings-row">
+                            <span><i class="fa-solid fa-bell"></i> Mission Alerts</span>
+                            <label class="switch">
+                            <input type="checkbox" checked id="missionAlerts">
+                            <span class="slider"></span>
+                        </label>
+                        </div>
+                        <div class="settings-row">
+                            <span><i class="fa-solid fa-envelope"></i> Email Updates</span>
+                            <label class="switch">
+                            <input type="checkbox" checked id="emailUpdates">
+                            <span class="slider"></span>
+                        </label>
+                        </div>
+                    </div>
+
+                    <div class="settings-group danger-zone">
+                        <h2>Danger Zone</h2>
+                        <label class="delete-account-container">
+                        <input id="deleteaccount" type="checkbox">
+                        <span>Delete My Account</span>
+                    </label>
+                        <div id="deleteConfirmBox" style="display:none;">
+                            <p style="font-size:13px;color:#ef4444;margin-bottom:8px;">⚠️ This action is irreversible. Enter your password to confirm.</p>
+                            <input type="password" id="deletePassword" placeholder="Re-enter your password">
+                            <button id="confirmDeleteBtn">Confirm Delete Account</button>
+                            <p id="deleteMessage"></p>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+            <!-- end .content -->
+        </main>
+    </div>
+
+    <!-- EDIT PROFILE MODAL -->
+    <div class="modal" id="editModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Edit Profile</h3>
+                <button class="modal-close" id="cancelEdit" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-avatar-row">
+                <img src="https://i.pravatar.cc/80" id="avatarPreview" alt="Avatar Preview">
+                <div>
+                    <label>Avatar URL</label>
+                    <input id="editAvatar" placeholder="https://..." type="url">
+                </div>
+            </div>
+            <label>Display Name</label>
+            <input id="editName" placeholder="Your Name">
+            <label>Email</label>
+            <input id="editEmail" placeholder="Email" type="email">
+            <label>Phone</label>
+            <input id="editPhone" placeholder="Phone Number" type="tel">
+            <label>Bio</label>
+            <textarea id="editBio" placeholder="Short Bio" rows="3"></textarea>
+            <label>Date of Birth</label>
+            <input id="dateOfBirth" type="date">
+            <div class="modal-actions">
+                <button id="cancelEditBtn" class="btn-cancel">Cancel</button>
+                <button id="saveProfile" class="btn-save">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+
+</html>

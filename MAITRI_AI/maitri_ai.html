@@ -1,0 +1,3614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Maitri AI — Your Caring Companion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+         :root {
+            --bg: #020c14;
+            --panel: #071018;
+            --panel2: #0b1822;
+            --border: #0d2535;
+            --border2: #163348;
+            --cyan: #00e5ff;
+            --green: #00ff87;
+            --amber: #ffc107;
+            --red: #ff3355;
+            --purple: #c084fc;
+            --txt: #daeaf5;
+            --txt2: #4a7a90;
+            --txt3: #1e3a4a;
+            --gold: #ffd700;
+            --rose: #ffb6c1;
+            --soft: #e8f4f8;
+            --font-hud: 'Orbitron', monospace;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-body: 'Exo 2', sans-serif;
+            --font-soft: 'Quicksand', sans-serif;
+            --gc: 0 0 8px rgba(0, 229, 255, .5), 0 0 20px rgba(0, 229, 255, .15);
+            --gg: 0 0 8px rgba(0, 255, 135, .5), 0 0 20px rgba(0, 255, 135, .15);
+            --gr: 0 0 8px rgba(255, 51, 85, .5);
+            --ga: 0 0 6px rgba(255, 193, 7, .4);
+            --gm: 0 0 10px rgba(255, 215, 0, .5), 0 0 22px rgba(255, 182, 193, .25);
+        }
+        
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+        
+        html {
+            font-size: 15px;
+            height: 100%
+        }
+        
+        body {
+            background: var(--bg);
+            color: var(--txt);
+            font-family: var(--font-body);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column
+        }
+        
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 229, 255, .006) 3px, rgba(0, 229, 255, .006) 4px);
+            pointer-events: none;
+            z-index: 9999
+        }
+        
+         ::-webkit-scrollbar {
+            width: 4px
+        }
+        
+         ::-webkit-scrollbar-track {
+            background: transparent
+        }
+        
+         ::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 2px
+        }
+        /* ═══ HEADER ═══ */
+        
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            height: 46px;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(90deg, #020c14 40%, #071420)
+        }
+        
+        .logo {
+            font-family: var(--font-hud);
+            font-size: .9rem;
+            font-weight: 900;
+            letter-spacing: .18em;
+            color: var(--cyan);
+            text-shadow: var(--gc)
+        }
+        
+        .logo em {
+            color: var(--gold);
+            font-style: normal;
+            text-shadow: var(--gm)
+        }
+        
+        .logo small {
+            font-family: var(--font-soft);
+            font-size: .55rem;
+            color: var(--txt2);
+            margin-left: 6px;
+            font-weight: 500
+        }
+        
+        .hdr-stats {
+            display: flex;
+            gap: 16px
+        }
+        
+        .hs {
+            display: flex;
+            flex-direction: column;
+            align-items: center
+        }
+        
+        .hs .lbl {
+            font-family: var(--font-mono);
+            font-size: .48rem;
+            color: var(--txt3);
+            letter-spacing: .1em
+        }
+        
+        .hs .val {
+            font-family: var(--font-mono);
+            font-size: .7rem;
+            color: var(--cyan)
+        }
+        
+        .hs .val.g {
+            color: var(--green)
+        }
+        
+        .hs .val.a {
+            color: var(--amber)
+        }
+        
+        .hs .val.r {
+            color: var(--red)
+        }
+        
+        .hs .val.m {
+            color: var(--gold)
+        }
+        
+        .hdr-right {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: .63rem;
+            color: var(--txt2)
+        }
+        
+        .ldot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--red);
+            display: inline-block;
+            margin-right: 3px;
+            animation: dr 1.2s ease-in-out infinite
+        }
+        
+        .ldot.on {
+            background: var(--green);
+            animation: dg 1.2s ease-in-out infinite
+        }
+        
+        @keyframes dr {
+            0%,
+            100% {
+                box-shadow: 0 0 3px var(--red)
+            }
+            50% {
+                box-shadow: 0 0 10px var(--red)
+            }
+        }
+        
+        @keyframes dg {
+            0%,
+            100% {
+                box-shadow: 0 0 3px var(--green)
+            }
+            50% {
+                box-shadow: 0 0 10px var(--green)
+            }
+        }
+        
+        .pill {
+            font-size: .56rem;
+            padding: 1px 7px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            color: var(--txt2);
+            background: var(--panel);
+            font-family: var(--font-mono)
+        }
+        
+        .pill.on {
+            color: var(--green);
+            border-color: var(--green);
+            background: #001a0a
+        }
+        
+        .pill.listening {
+            color: var(--amber);
+            border-color: var(--amber);
+            background: #1a1000;
+            animation: pa .8s ease-in-out infinite
+        }
+        
+        .pill.speaking {
+            color: var(--purple);
+            border-color: var(--purple);
+            background: #14082a;
+            animation: pa .4s ease-in-out infinite
+        }
+        
+        @keyframes pa {
+            0%,
+            100% {
+                opacity: 1
+            }
+            50% {
+                opacity: .6
+            }
+        }
+        /* ═══ WORKSPACE ═══ */
+        
+        .workspace {
+            display: grid;
+            grid-template-columns: 285px 1fr 290px;
+            gap: 7px;
+            padding: 7px;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden
+        }
+        
+        .col {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            min-height: 0;
+            overflow-y: auto
+        }
+        
+        .col-mid {
+            overflow: hidden
+        }
+        /* ═══ PANEL ═══ */
+        
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 10px 12px;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0
+        }
+        
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            opacity: .3
+        }
+        
+        .panel.gp::before {
+            background: linear-gradient(90deg, transparent, var(--green), transparent)
+        }
+        
+        .panel.ap::before {
+            background: linear-gradient(90deg, transparent, var(--amber), transparent)
+        }
+        
+        .panel.rp::before {
+            background: linear-gradient(90deg, transparent, var(--red), transparent)
+        }
+        
+        .panel.mp::before {
+            background: linear-gradient(90deg, transparent, var(--gold), var(--rose), transparent);
+            opacity: .5
+        }
+        
+        .panel.pp::before {
+            background: linear-gradient(90deg, transparent, var(--purple), transparent)
+        }
+        
+        .ptitle {
+            font-family: var(--font-hud);
+            font-size: .54rem;
+            letter-spacing: .18em;
+            color: var(--txt2);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px
+        }
+        
+        .ptitle::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border), transparent)
+        }
+        /* ═══ CAMERA ═══ */
+        
+        #cam-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #010810;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            overflow: hidden
+        }
+        
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transform: scaleX(-1)
+        }
+        
+        #overlay-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none
+        }
+        
+        .corners {
+            position: absolute;
+            inset: 0;
+            pointer-events: none
+        }
+        
+        .corners::before,
+        .corners::after,
+        .corners span::before,
+        .corners span::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-color: var(--cyan);
+            border-style: solid
+        }
+        
+        .corners::before {
+            top: 6px;
+            left: 6px;
+            border-width: 2px 0 0 2px
+        }
+        
+        .corners::after {
+            top: 6px;
+            right: 6px;
+            border-width: 2px 2px 0 0
+        }
+        
+        .corners span::before {
+            bottom: 6px;
+            left: 6px;
+            border-width: 0 0 2px 2px
+        }
+        
+        .corners span::after {
+            bottom: 6px;
+            right: 6px;
+            border-width: 0 2px 2px 0
+        }
+        
+        .cambar {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            font-family: var(--font-mono);
+            font-size: .6rem;
+            color: var(--txt2)
+        }
+        /* ═══ BIOMETRIC CARDS ═══ */
+        
+        .emo-display {
+            display: flex;
+            gap: 10px;
+            align-items: center
+        }
+        
+        .emo-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 86px;
+            padding: 8px 5px;
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 4px
+        }
+        
+        .emo-left.changed {
+            animation: eflash .7s ease
+        }
+        
+        @keyframes eflash {
+            0%,
+            100% {
+                border-color: var(--border)
+            }
+            40%,
+            60% {
+                border-color: var(--gold);
+                box-shadow: 0 0 12px rgba(255, 215, 0, .4)
+            }
+        }
+        
+        .emo-emoji {
+            font-size: 2.5rem;
+            line-height: 1
+        }
+        
+        .emo-lbl {
+            font-family: var(--font-hud);
+            font-size: .8rem;
+            font-weight: 800;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            margin-top: 3px;
+            color: var(--cyan);
+            text-shadow: var(--gc)
+        }
+        
+        .emo-conf {
+            font-family: var(--font-mono);
+            font-size: .57rem;
+            color: var(--txt2);
+            margin-top: 1px
+        }
+        
+        .emo-mood {
+            font-family: var(--font-soft);
+            font-size: .58rem;
+            color: var(--gold);
+            margin-top: 2px;
+            text-align: center;
+            font-weight: 600
+        }
+        
+        .stat-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px
+        }
+        
+        .sc {
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 5px 7px
+        }
+        
+        .sc .sk {
+            font-family: var(--font-mono);
+            font-size: .53rem;
+            color: var(--txt2);
+            letter-spacing: .06em
+        }
+        
+        .sc .sv {
+            font-family: var(--font-hud);
+            font-size: .73rem;
+            font-weight: 700;
+            margin-top: 1px;
+            color: var(--cyan)
+        }
+        
+        .sv.g {
+            color: var(--green);
+            text-shadow: var(--gg)
+        }
+        
+        .sv.r {
+            color: var(--red);
+            text-shadow: var(--gr)
+        }
+        
+        .sv.a {
+            color: var(--amber);
+            text-shadow: var(--ga)
+        }
+        
+        .sv.p {
+            color: var(--purple)
+        }
+        
+        .sv.c {
+            color: var(--cyan);
+            text-shadow: var(--gc)
+        }
+        /* ═══ MAITRI PANEL ═══ */
+        
+        .maitri-panel {
+            background: linear-gradient(135deg, #070f1c, #0c1828);
+            border: 1px solid rgba(255, 215, 0, .2);
+            border-radius: 6px;
+            padding: 12px;
+            position: relative;
+            overflow: hidden
+        }
+        
+        .maitri-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), var(--rose), transparent);
+            opacity: .6
+        }
+        
+        .maitri-hdr {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 9px
+        }
+        
+        .maitri-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a1040, #2a2060);
+            border: 2px solid var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            animation: aglow 3s ease-in-out infinite
+        }
+        
+        @keyframes aglow {
+            0%,
+            100% {
+                box-shadow: 0 0 6px rgba(255, 215, 0, .3)
+            }
+            50% {
+                box-shadow: 0 0 16px rgba(255, 215, 0, .5), 0 0 28px rgba(255, 182, 193, .2)
+            }
+        }
+        
+        .maitri-avatar.talking {
+            animation: atalk .4s ease-in-out infinite
+        }
+        
+        @keyframes atalk {
+            0%,
+            100% {
+                box-shadow: 0 0 8px rgba(192, 132, 252, .6), 0 0 20px rgba(192, 132, 252, .3)
+            }
+            50% {
+                box-shadow: 0 0 18px rgba(192, 132, 252, .9), 0 0 36px rgba(192, 132, 252, .5)
+            }
+        }
+        
+        .maitri-info {
+            flex: 1
+        }
+        
+        .maitri-name {
+            font-family: var(--font-soft);
+            font-size: .9rem;
+            font-weight: 700;
+            color: var(--gold);
+            text-shadow: var(--gm)
+        }
+        
+        .maitri-sub {
+            font-family: var(--font-soft);
+            font-size: .57rem;
+            color: var(--txt2);
+            margin-top: 1px
+        }
+        
+        #ai-badge {
+            font-family: var(--font-mono);
+            font-size: .5rem;
+            padding: 1px 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            color: var(--txt2);
+            background: var(--panel2);
+            margin-top: 3px;
+            display: inline-block
+        }
+        
+        #ai-badge.gemini {
+            color: #4285f4;
+            border-color: rgba(66, 133, 244, .5);
+            background: rgba(66, 133, 244, .08)
+        }
+        
+        #ai-badge.openai {
+            color: #10a37f;
+            border-color: rgba(16, 163, 127, .5);
+            background: rgba(16, 163, 127, .08)
+        }
+        
+        #ai-badge.groq {
+            color: #f97316;
+            border-color: rgba(249, 115, 22, .5);
+            background: rgba(249, 115, 22, .08)
+        }
+        
+        .mvi {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            height: 14px
+        }
+        
+        .mvi span {
+            width: 3px;
+            border-radius: 2px;
+            background: var(--gold);
+            opacity: .3;
+            transition: all .2s;
+            height: 4px
+        }
+        
+        .mvi span.on {
+            opacity: 1;
+            animation: mviw .5s ease-in-out infinite
+        }
+        
+        .mvi span:nth-child(2) {
+            animation-delay: .1s
+        }
+        
+        .mvi span:nth-child(3) {
+            animation-delay: .2s
+        }
+        
+        .mvi span:nth-child(4) {
+            animation-delay: .3s
+        }
+        
+        .mvi span:nth-child(5) {
+            animation-delay: .4s
+        }
+        
+        @keyframes mviw {
+            0%,
+            100% {
+                height: 4px
+            }
+            50% {
+                height: 13px
+            }
+        }
+        /* mic button — small circle */
+        
+        #mic-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .85rem;
+            flex-shrink: 0;
+            cursor: pointer;
+            border: 1px solid var(--amber);
+            color: var(--amber);
+            background: transparent;
+            transition: all .2s
+        }
+        
+        #mic-btn:hover {
+            background: rgba(255, 193, 7, .12)
+        }
+        
+        #mic-btn.on {
+            border-color: var(--green);
+            color: var(--green);
+            animation: mao 2s ease-in-out infinite
+        }
+        
+        #mic-btn.rec {
+            background: var(--red)!important;
+            color: #fff;
+            border-color: var(--red);
+            animation: mrec .55s ease-in-out infinite
+        }
+        
+        @keyframes mao {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 255, 135, .3)
+            }
+            50% {
+                box-shadow: 0 0 0 5px rgba(0, 255, 135, 0)
+            }
+        }
+        
+        @keyframes mrec {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 51, 85, .5)
+            }
+            50% {
+                box-shadow: 0 0 0 6px rgba(255, 51, 85, 0)
+            }
+        }
+        /* mood-change banner */
+        
+        .mc-banner {
+            display: none;
+            background: linear-gradient(90deg, rgba(255, 215, 0, .1), rgba(255, 182, 193, .08));
+            border: 1px solid rgba(255, 215, 0, .3);
+            border-radius: 3px;
+            padding: 4px 9px;
+            margin-bottom: 7px;
+            font-family: var(--font-soft);
+            font-size: .63rem;
+            color: var(--gold);
+            text-align: center;
+            font-weight: 600
+        }
+        
+        .mc-banner.show {
+            display: block;
+            animation: bin .35s ease
+        }
+        
+        @keyframes bin {
+            from {
+                opacity: 0;
+                transform: translateY(-3px)
+            }
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+        /* speech box */
+        
+        .speech-box {
+            background: rgba(0, 0, 0, .3);
+            border: 1px solid rgba(255, 215, 0, .12);
+            border-left: 3px solid var(--gold);
+            border-radius: 4px;
+            padding: 9px 11px;
+            min-height: 50px;
+            position: relative
+        }
+        
+        .speech-txt {
+            font-family: var(--font-soft);
+            font-size: .76rem;
+            color: var(--soft);
+            line-height: 1.65;
+            font-weight: 500
+        }
+        
+        .speech-txt.typing::after {
+            content: '|';
+            animation: cur .55s step-start infinite;
+            color: var(--gold);
+            margin-left: 1px
+        }
+        
+        @keyframes cur {
+            0%,
+            100% {
+                opacity: 1
+            }
+            50% {
+                opacity: 0
+            }
+        }
+        
+        .ai-powered-tag {
+            display: none;
+            font-family: var(--font-mono);
+            font-size: .48rem;
+            color: var(--gold);
+            margin-bottom: 4px;
+            letter-spacing: .08em
+        }
+        /* advice box */
+        
+        .advice-box {
+            background: rgba(0, 255, 135, .05);
+            border: 1px solid rgba(0, 255, 135, .18);
+            border-radius: 3px;
+            padding: 7px 10px;
+            margin-top: 6px;
+            font-family: var(--font-soft);
+            font-size: .7rem;
+            color: #a8f5d8;
+            line-height: 1.55;
+            display: none
+        }
+        
+        .advice-box.show {
+            display: block
+        }
+        
+        .advice-lbl {
+            font-family: var(--font-hud);
+            font-size: .48rem;
+            letter-spacing: .15em;
+            color: var(--green);
+            margin-bottom: 3px
+        }
+        /* voice bar + waveform */
+        
+        .voice-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 5px;
+            padding: 4px 9px;
+            background: rgba(0, 0, 0, .2);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            font-family: var(--font-mono);
+            font-size: .61rem;
+            color: var(--txt2)
+        }
+        
+        .waveform {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            height: 10px
+        }
+        
+        .waveform span {
+            width: 2px;
+            background: var(--amber);
+            border-radius: 2px;
+            animation: wv .55s ease-in-out infinite;
+            opacity: 0
+        }
+        
+        .waveform.on span {
+            opacity: 1
+        }
+        
+        .waveform span:nth-child(2) {
+            animation-delay: .1s
+        }
+        
+        .waveform span:nth-child(3) {
+            animation-delay: .2s
+        }
+        
+        .waveform span:nth-child(4) {
+            animation-delay: .3s
+        }
+        
+        .waveform span:nth-child(5) {
+            animation-delay: .4s
+        }
+        
+        @keyframes wv {
+            0%,
+            100% {
+                height: 2px
+            }
+            50% {
+                height: 10px
+            }
+        }
+        /* text input row */
+        
+        .irow {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            margin-top: 6px
+        }
+        
+        #stt-input {
+            flex: 1;
+            background: rgba(0, 0, 0, .3);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 6px 10px;
+            font-family: var(--font-soft);
+            font-size: .7rem;
+            color: var(--txt);
+            outline: none;
+            transition: border-color .2s
+        }
+        
+        #stt-input:focus {
+            border-color: var(--gold)
+        }
+        
+        #stt-input::placeholder {
+            color: var(--txt3)
+        }
+        
+        .heard-row {
+            margin-top: 4px;
+            font-family: var(--font-soft);
+            font-size: .62rem;
+            color: var(--txt2)
+        }
+        /* ═══ BUTTONS ═══ */
+        
+        .btn {
+            font-family: var(--font-hud);
+            font-size: .57rem;
+            font-weight: 600;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+            padding: 6px 12px;
+            border: 1px solid;
+            border-radius: 3px;
+            cursor: pointer;
+            background: transparent;
+            transition: all .18s
+        }
+        
+        .bc {
+            border-color: var(--cyan);
+            color: var(--cyan)
+        }
+        
+        .bc:hover {
+            background: var(--cyan);
+            color: #000;
+            box-shadow: var(--gc)
+        }
+        
+        .br {
+            border-color: var(--red);
+            color: var(--red)
+        }
+        
+        .br:hover {
+            background: var(--red);
+            color: #fff
+        }
+        
+        .bg {
+            border-color: var(--green);
+            color: var(--green)
+        }
+        
+        .bg:hover {
+            background: var(--green);
+            color: #000;
+            box-shadow: var(--gg)
+        }
+        
+        .ba {
+            border-color: var(--amber);
+            color: var(--amber)
+        }
+        
+        .ba:hover {
+            background: var(--amber);
+            color: #000
+        }
+        
+        .bm {
+            border-color: var(--gold);
+            color: var(--gold)
+        }
+        
+        .bm:hover {
+            background: var(--gold);
+            color: #000;
+            box-shadow: var(--gm)
+        }
+        
+        .bp {
+            border-color: var(--purple);
+            color: var(--purple)
+        }
+        
+        .bp:hover {
+            background: var(--purple);
+            color: #000
+        }
+        
+        .brow {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-top: 7px
+        }
+        /* ═══ TABS ═══ */
+        
+        .tabs {
+            display: flex;
+            gap: 3px;
+            flex-shrink: 0;
+            padding-bottom: 5px
+        }
+        
+        .tab {
+            font-family: var(--font-hud);
+            font-size: .52rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 3px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--txt2);
+            cursor: pointer;
+            transition: all .15s
+        }
+        
+        .tab:hover {
+            border-color: var(--cyan);
+            color: var(--cyan)
+        }
+        
+        .tab.on {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: rgba(0, 229, 255, .07);
+            box-shadow: var(--gc)
+        }
+        
+        .pane {
+            display: none;
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+            gap: 7px
+        }
+        
+        .pane.on {
+            display: flex
+        }
+        /* ═══ PROB BARS ═══ */
+        
+        .prob-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+        
+        .prob-row {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+        
+        .prob-name {
+            font-family: var(--font-soft);
+            font-size: .68rem;
+            color: var(--txt);
+            width: 84px;
+            flex-shrink: 0;
+            font-weight: 600
+        }
+        
+        .prob-track {
+            flex: 1;
+            height: 9px;
+            background: var(--panel2);
+            border-radius: 5px;
+            overflow: hidden
+        }
+        
+        .prob-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width .4s ease
+        }
+        
+        .prob-pct {
+            font-family: var(--font-hud);
+            font-size: .63rem;
+            font-weight: 600;
+            width: 34px;
+            text-align: right
+        }
+        /* ═══ CHARTS ═══ */
+        
+        .chart-box {
+            position: relative;
+            flex: 1;
+            min-height: 130px
+        }
+        /* ═══ TREND ═══ */
+        
+        .trend-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px
+        }
+        
+        .tr-row {
+            display: flex;
+            align-items: center;
+            gap: 7px
+        }
+        
+        .tr-name {
+            font-family: var(--font-soft);
+            font-size: .66rem;
+            color: var(--txt);
+            width: 80px;
+            flex-shrink: 0;
+            font-weight: 600
+        }
+        
+        .tr-track {
+            flex: 1;
+            height: 6px;
+            background: var(--panel2);
+            border-radius: 3px;
+            overflow: hidden
+        }
+        
+        .tr-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width .5s ease
+        }
+        
+        .tr-pct {
+            font-family: var(--font-hud);
+            font-size: .6rem;
+            width: 32px;
+            text-align: right
+        }
+        /* ═══ HEATMAP ═══ */
+        
+        .heatmap {
+            display: grid;
+            grid-template-columns: repeat(25, 1fr);
+            gap: 2px;
+            margin-top: 4px
+        }
+        
+        .hc {
+            aspect-ratio: 1;
+            border-radius: 2px;
+            background: var(--panel2);
+            transition: background .3s;
+            cursor: default
+        }
+        
+        .hm-leg {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 7px
+        }
+        
+        .hli {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-family: var(--font-soft);
+            font-size: .6rem;
+            color: var(--txt2);
+            font-weight: 500
+        }
+        
+        .hld {
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            flex-shrink: 0
+        }
+        /* ═══ MUSIC ═══ */
+        
+        .music-card {
+            background: linear-gradient(135deg, rgba(192, 132, 252, .07), rgba(255, 182, 193, .04));
+            border: 1px solid rgba(192, 132, 252, .25);
+            border-radius: 4px;
+            padding: 9px 11px
+        }
+        
+        .music-lbl {
+            font-family: var(--font-hud);
+            font-size: .48rem;
+            letter-spacing: .14em;
+            color: var(--purple);
+            margin-bottom: 4px
+        }
+        
+        .music-txt {
+            font-family: var(--font-soft);
+            font-size: .7rem;
+            color: var(--txt);
+            line-height: 1.55;
+            font-weight: 500
+        }
+        
+        .music-tag {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: .52rem;
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-right: 4px;
+            background: rgba(192, 132, 252, .2);
+            color: var(--purple)
+        }
+        
+        .tip-txt {
+            font-family: var(--font-soft);
+            font-size: .63rem;
+            color: var(--amber);
+            margin-top: 6px;
+            border-top: 1px solid var(--border);
+            padding-top: 5px;
+            line-height: 1.5
+        }
+        
+        .music-hist-item {
+            padding: 5px 8px;
+            background: var(--panel2);
+            border-radius: 3px;
+            margin-bottom: 5px
+        }
+        /* ═══ LANGUAGE SELECTOR MODAL ═══ */
+        
+        .lang-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .75);
+            z-index: 8000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px)
+        }
+        
+        .lang-modal {
+            background: linear-gradient(135deg, #071018, #0d1c2c);
+            border: 1px solid rgba(255, 215, 0, .3);
+            border-radius: 10px;
+            padding: 28px 32px;
+            max-width: 460px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .6)
+        }
+        
+        .lang-modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), var(--rose), transparent);
+            border-radius: 10px 10px 0 0
+        }
+        
+        .lang-modal-avatar {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 10px
+        }
+        
+        .lang-modal-name {
+            font-family: var(--font-soft);
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--gold);
+            text-align: center;
+            text-shadow: var(--gm);
+            margin-bottom: 6px
+        }
+        
+        .lang-modal-msg {
+            font-family: var(--font-soft);
+            font-size: .82rem;
+            color: var(--soft);
+            line-height: 1.7;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 500
+        }
+        
+        .lang-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 18px
+        }
+        
+        .lang-btn {
+            padding: 10px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border2);
+            background: var(--panel2);
+            cursor: pointer;
+            font-family: var(--font-soft);
+            font-size: .75rem;
+            font-weight: 600;
+            color: var(--txt);
+            text-align: center;
+            transition: all .2s;
+            line-height: 1.4
+        }
+        
+        .lang-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(255, 215, 0, .08);
+            transform: translateY(-1px)
+        }
+        
+        .lang-btn.selected {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, .15);
+            color: var(--gold);
+            box-shadow: 0 0 10px rgba(255, 215, 0, .3)
+        }
+        
+        .lang-btn .flag {
+            display: block;
+            font-size: 1.3rem;
+            margin-bottom: 3px
+        }
+        
+        .lang-confirm-btn {
+            width: 100%;
+            padding: 11px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, var(--gold), #e6b800);
+            color: #000;
+            font-family: var(--font-hud);
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            cursor: pointer;
+            border: none;
+            transition: all .2s
+        }
+        
+        .lang-confirm-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(255, 215, 0, .4)
+        }
+        
+        .lang-confirm-btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            transform: none
+        }
+        /* Lang badge in music panel */
+        
+        .lang-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-family: var(--font-mono);
+            font-size: .52rem;
+            padding: 2px 7px;
+            border-radius: 8px;
+            background: rgba(255, 215, 0, .1);
+            border: 1px solid rgba(255, 215, 0, .3);
+            color: var(--gold);
+            margin-left: 6px
+        }
+        /* ═══ EXIT BUTTON ═══ */
+        
+        #btn-exit {
+            /* Use 'fixed' or 'absolute' for corner positioning */
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            /* Layout and Spacing */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 9px 10px;
+            /* Sizing and Border */
+            width: 60px;
+            height: 30px;
+            border: 1px solid var(--red);
+            border-radius: 4px;
+            /* Typography */
+            color: var(--red);
+            background: transparent;
+            cursor: pointer;
+            font-family: var(--font-hud);
+            font-size: .5rem;
+            font-weight: 600;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            /* Animation */
+            transition: all .2s ease-in-out;
+            z-index: 1000;
+            /* Ensures it stays above other elements */
+        }
+        
+        #btn-exit:hover {
+            background: var(--red);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(255, 51, 85, .4);
+            transform: translateY(-1px);
+            /* Subtle lift effect */
+        }
+        /* ═══ MUSIC OPEN BUTTONS ═══ */
+        
+        .music-open-btns {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            align-items: center
+        }
+        /* YouTube — big primary button */
+        
+        .music-open-btn.yt {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 5px;
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            color: #fff;
+            font-family: var(--font-hud);
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-decoration: none;
+            transition: all .2s;
+            flex: 2;
+            border: none;
+            cursor: pointer
+        }
+        
+        .music-open-btn.yt:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(255, 0, 0, .5)
+        }
+        
+        .music-open-btn.yt svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0
+        }
+        /* Spotify — smaller secondary */
+        
+        .music-open-btn.sp {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 8px 10px;
+            border-radius: 5px;
+            background: rgba(29, 185, 84, .12);
+            color: #1db954;
+            font-family: var(--font-hud);
+            font-size: .54rem;
+            font-weight: 600;
+            letter-spacing: .07em;
+            text-decoration: none;
+            transition: all .2s;
+            flex: 1;
+            border: 1px solid rgba(29, 185, 84, .3);
+            cursor: pointer
+        }
+        
+        .music-open-btn.sp:hover {
+            background: rgba(29, 185, 84, .25);
+            border-color: rgba(29, 185, 84, .6)
+        }
+        
+        .music-open-btn.sp svg {
+            width: 13px;
+            height: 13px;
+            flex-shrink: 0
+        }
+        /* ═══ CONV / METRICS / LOG ═══ */
+        
+        #conv-log {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-height: 160px;
+            overflow-y: auto
+        }
+        
+        .cb {
+            padding: 5px 9px;
+            border-radius: 4px;
+            max-width: 93%
+        }
+        
+        .cb.user {
+            background: #0d2035;
+            border-left: 2px solid var(--cyan);
+            align-self: flex-end
+        }
+        
+        .cb.maitri {
+            background: linear-gradient(135deg, #0a1820, #0f1c2a);
+            border-left: 2px solid var(--gold);
+            align-self: flex-start
+        }
+        
+        .cb .bt {
+            font-family: var(--font-soft);
+            font-size: .7rem;
+            color: var(--txt);
+            line-height: 1.5
+        }
+        
+        .cb .bm {
+            font-family: var(--font-mono);
+            font-size: .53rem;
+            color: var(--txt2);
+            margin-top: 2px
+        }
+        
+        .mrow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--border)
+        }
+        
+        .mrow:last-child {
+            border: none
+        }
+        
+        .mk {
+            font-family: var(--font-mono);
+            font-size: .65rem;
+            color: var(--txt2)
+        }
+        
+        .mv {
+            font-family: var(--font-hud);
+            font-size: .7rem;
+            font-weight: 600
+        }
+        
+        .mv.c {
+            color: var(--cyan)
+        }
+        
+        .mv.g {
+            color: var(--green)
+        }
+        
+        .mv.r {
+            color: var(--red)
+        }
+        
+        .mv.a {
+            color: var(--amber)
+        }
+        
+        .mv.m {
+            color: var(--gold)
+        }
+        
+        .mv.p {
+            color: var(--purple)
+        }
+        
+        #event-log {
+            height: 105px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: .61rem;
+            line-height: 1.7;
+            color: var(--txt2)
+        }
+        
+        .evr {
+            padding: 1px 0;
+            border-bottom: 1px solid #0a1520
+        }
+        
+        .ev-ts {
+            color: var(--cyan);
+            margin-right: 5px;
+            opacity: .6
+        }
+        
+        .ew {
+            color: var(--amber)
+        }
+        
+        .ee {
+            color: var(--red)
+        }
+        
+        .eg {
+            color: var(--green)
+        }
+        
+        .em {
+            color: var(--gold);
+            font-style: italic
+        }
+        
+        #alert-hist {
+            max-height: 80px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: .62rem;
+            color: var(--txt2)
+        }
+        
+        .ah {
+            padding: 2px 0;
+            border-bottom: 1px solid #1a0a10;
+            display: flex;
+            gap: 6px
+        }
+        
+        .ah-ts {
+            color: var(--txt3)
+        }
+        
+        .ah-msg {
+            color: var(--red)
+        }
+        
+        .mood-freq-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 4px 7px;
+            background: var(--panel2);
+            border-radius: 3px;
+            margin-bottom: 4px
+        }
+        /* ═══ FOCUS RING ═══ */
+        
+        .fring-wrap {
+            display: flex;
+            justify-content: center;
+            padding: 3px 0
+        }
+        
+        .fring {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column
+        }
+        
+        .fring svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg)
+        }
+        
+        .fr-bg {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 6
+        }
+        
+        .fr-fg {
+            fill: none;
+            stroke: var(--green);
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 214;
+            transition: stroke-dashoffset .8s ease
+        }
+        
+        .fr-val {
+            font-family: var(--font-hud);
+            font-size: .82rem;
+            font-weight: 800;
+            color: var(--green);
+            text-shadow: var(--gg)
+        }
+        
+        .fr-lbl {
+            font-family: var(--font-mono);
+            font-size: .48rem;
+            color: var(--txt2);
+            margin-top: 1px
+        }
+        /* ═══ ALERT TOAST ═══ */
+        
+        #alert-toast {
+            position: fixed;
+            bottom: 14px;
+            right: 14px;
+            background: #14040e;
+            border: 1px solid var(--red);
+            border-left: 4px solid var(--red);
+            border-radius: 4px;
+            padding: 9px 14px;
+            font-family: var(--font-hud);
+            font-size: .68rem;
+            color: var(--red);
+            text-shadow: var(--gr);
+            letter-spacing: .05em;
+            transform: translateY(70px);
+            opacity: 0;
+            transition: all .3s cubic-bezier(.22, 1, .36, 1);
+            z-index: 9000;
+            max-width: 300px
+        }
+        
+        #alert-toast.show {
+            transform: none;
+            opacity: 1
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo">MAITRI<em>AI</em><small>v5.0</small></div>
+        <div class="hdr-stats">
+            <div class="hs"><span class="lbl">CLOCK</span><span class="val" id="clock">--:--:--</span></div>
+            <div class="hs"><span class="lbl">FRAMES</span><span class="val c" id="hdr-frames">0</span></div>
+            <div class="hs"><span class="lbl">FPS</span><span class="val g" id="hdr-fps">0</span></div>
+            <div class="hs"><span class="lbl">DETECT</span><span class="val a" id="hdr-det">--ms</span></div>
+            <div class="hs"><span class="lbl">UPTIME</span><span class="val c" id="hdr-uptime">00:00:00</span></div>
+            <div class="hs"><span class="lbl">EMOTION</span><span class="val m" id="hdr-emo">—</span></div>
+            <div class="hs"><span class="lbl">MOOD SHIFTS</span><span class="val p" id="hdr-shifts">0</span></div>
+        </div>
+        <div class="hdr-right">
+            <span><span class="ldot" id="live-dot"></span><span id="status-txt">OFFLINE</span></span>
+            <span class="pill" id="voice-pill">MIC OFF</span>
+            <span class="pill" id="ws-pill">WS: --</span>
+            <span id="sid-hdr" style="font-size:.58rem">SID: --</span>
+        </div>
+    </header>
+
+    <div class="workspace">
+
+        <!-- ═══════ LEFT COL ═══════ -->
+        <div class="col">
+
+            <!-- Camera -->
+            <div class="panel">
+                <div class="ptitle">📷 Neural Feed</div>
+                <div id="cam-wrap">
+                    <video id="video" autoplay muted playsinline></video>
+                    <canvas id="overlay-canvas"></canvas>
+                    <div class="corners"><span></span></div>
+                </div>
+                <div class="cambar">
+                    <span>F:<strong id="fc">0</strong></span>
+                    <span id="fps-disp">0 FPS</span>
+                    <span>DET:<strong id="det-ms">--</strong>ms</span>
+                </div>
+                <div class="brow">
+                    <button class="btn bc" id="btn-start">▶ START</button>
+                    <button class="btn br" id="btn-stop">■ STOP</button>
+                    <button class="btn bg" id="btn-save">⬇ SAVE</button>
+                    <button class="btn ba" id="btn-shot">📸</button>
+                </div>
+            </div>
+
+            <!-- Biometric state -->
+            <div class="panel">
+                <div class="ptitle">🧠 Biometric State</div>
+                <div id="mc-banner" class="mc-banner">✨ Mood shift — Maitri is responding...</div>
+                <div class="emo-display">
+                    <div class="emo-left" id="emo-left">
+                        <span class="emo-emoji" id="emo-emoji">🔍</span>
+                        <div class="emo-lbl" id="emo-lbl">SCAN</div>
+                        <div class="emo-conf" id="emo-conf">CONF: —</div>
+                        <div class="emo-mood" id="emo-mood">—</div>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="sc">
+                            <div class="sk">MENTAL STATE</div>
+                            <div class="sv c" id="sv-state">—</div>
+                        </div>
+                        <div class="sc">
+                            <div class="sk">FOCUS</div>
+                            <div class="sv g" id="sv-focus">—</div>
+                        </div>
+                        <div class="sc">
+                            <div class="sk">FATIGUE</div>
+                            <div class="sv a" id="sv-fatigue">—</div>
+                        </div>
+                        <div class="sc">
+                            <div class="sk">BEHAVIOR</div>
+                            <div class="sv p" id="sv-behavior">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Focus ring + quick stats -->
+            <div class="panel" style="display:flex;gap:10px;align-items:center">
+                <div class="fring-wrap">
+                    <div class="fring">
+                        <svg viewBox="0 0 76 76"><circle class="fr-bg" cx="38" cy="38" r="34"/><circle class="fr-fg" id="fr-c" cx="38" cy="38" r="34" stroke-dashoffset="214"/></svg>
+                        <span class="fr-val" id="fr-val">0%</span><span class="fr-lbl">FOCUS</span>
+                    </div>
+                </div>
+                <div style="flex:1">
+                    <div class="mrow"><span class="mk">Raw Emotion</span><span class="mv c" id="sv-raw">—</span></div>
+                    <div class="mrow"><span class="mk">Alerts Fired</span><span class="mv r" id="sv-alerts">0</span></div>
+                    <div class="mrow"><span class="mk">Mood Shifts</span><span class="mv p" id="sv-shifts">0</span></div>
+                    <div class="mrow"><span class="mk">Avg Confidence</span><span class="mv a" id="sv-conf">—</span></div>
+                    <div class="mrow"><span class="mk">Status</span><span class="mv g" id="sv-status">IDLE</span></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ═══════ CENTER COL ═══════ -->
+        <div class="col col-mid" style="gap:7px">
+
+            <!-- Maitri speech panel — PROMINENT CENTER -->
+            <div class="maitri-panel" style="flex-shrink:0">
+                <div class="maitri-hdr">
+                    <div class="maitri-avatar" id="maitri-avatar">🌸</div>
+                    <div class="maitri-info">
+                        <div class="maitri-name">Maitri</div>
+                        <div class="maitri-sub">Your AI Wellbeing Companion • Always Here For You</div>
+                        <div id="ai-badge">checking AI...</div>
+                    </div>
+                    <div class="mvi" id="mvi">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    <button id="mic-btn" title="Toggle continuous voice">🎤</button>
+                </div>
+
+                <div id="speech-box" class="speech-box">
+                    <div id="ai-pow-tag" class="ai-powered-tag">✨ Real AI response</div>
+                    <div class="speech-txt" id="speech-txt">Hi there... I'm Maitri. Press START and I'll be right with you. 🌸</div>
+                </div>
+
+                <div class="advice-box" id="advice-box">
+                    <div class="advice-lbl">💡 Maitri's Guidance</div>
+                    <span id="advice-text"></span>
+                </div>
+
+                <div class="irow">
+                    <input id="stt-input" type="text" placeholder="Talk to Maitri... or just speak 🎤" autocomplete="off" />
+                    <button class="btn bm" id="btn-send" style="padding:5px 10px;white-space:nowrap;font-size:.55rem">SEND</button>
+                </div>
+
+                <div class="voice-bar">
+                    <div class="waveform" id="waveform"><span></span><span></span><span></span><span></span><span></span></div>
+                    <span id="vs-txt" style="font-family:var(--font-soft);font-size:.63rem">Initialising...</span>
+                </div>
+                <div class="heard-row">You said: <span id="spoken-txt" style="color:var(--txt)">—</span></div>
+            </div>
+
+            <!-- TABS -->
+            <div class="tabs">
+                <button class="tab on" data-tab="t-probs">Live Probs</button>
+                <button class="tab" data-tab="t-timeline">Timeline</button>
+                <button class="tab" data-tab="t-trend">Trend</button>
+                <button class="tab" data-tab="t-heatmap">Heatmap</button>
+                <button class="tab" data-tab="t-music">🎵 Music</button>
+            </div>
+
+            <!-- Probabilities -->
+            <div class="pane on" id="t-probs" style="overflow-y:auto">
+                <div class="panel" style="flex:1">
+                    <div class="ptitle">📊 Emotion Probabilities</div>
+                    <div id="prob-bars" class="prob-list"></div>
+                </div>
+                <div class="panel" style="display:flex;gap:12px;align-items:center;flex-shrink:0">
+                    <div style="width:120px;height:120px;flex-shrink:0"><canvas id="pie-chart"></canvas></div>
+                    <div style="flex:1" id="pie-legend"></div>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="pane" id="t-timeline">
+                <div class="panel" style="flex:1;display:flex;flex-direction:column">
+                    <div class="ptitle">📈 Emotion Timeline</div>
+                    <div class="chart-box"><canvas id="tl-chart"></canvas></div>
+                </div>
+                <div class="panel" style="flex:1;display:flex;flex-direction:column">
+                    <div class="ptitle">💯 Confidence Over Time</div>
+                    <div class="chart-box"><canvas id="conf-chart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Trend -->
+            <div class="pane" id="t-trend" style="overflow-y:auto">
+                <div class="panel" style="flex:1">
+                    <div class="ptitle">🎯 Session Distribution</div>
+                    <div id="trend-bars" class="trend-list"></div>
+                </div>
+                <div class="panel" style="flex-shrink:0">
+                    <div class="ptitle">📊 Emotion Counts</div>
+                    <div class="chart-box" style="min-height:150px"><canvas id="bar-chart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Heatmap -->
+            <div class="pane" id="t-heatmap">
+                <div class="panel" style="flex:1;overflow-y:auto">
+                    <div class="ptitle">🔥 Emotion Heatmap — 250 Recent Frames</div>
+                    <div id="heatmap" class="heatmap"></div>
+                    <div id="hm-legend" class="hm-leg"></div>
+                </div>
+            </div>
+
+            <!-- Music -->
+            <div class="pane" id="t-music" style="overflow-y:auto">
+                <div class="panel pp" style="flex-shrink:0">
+                    <div class="ptitle">🎵 AI Music Therapy</div>
+                    <div class="music-card">
+                        <div class="music-lbl">CURRENT RECOMMENDATION</div>
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                            <span class="music-tag" id="music-tag">—</span>
+                            <span class="lang-badge" id="music-lang-badge" style="display:none">🌐 Hindi</span>
+                            <span class="music-txt" id="music-txt" style="flex:1">Start detection for music recommendations...</span>
+                        </div>
+                        <!-- Open on YouTube / Spotify buttons -->
+                        <div class="music-open-btns" id="music-open-btns" style="display:none">
+                            <a id="music-yt-btn" href="#" target="_blank" rel="noopener" class="music-open-btn yt">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>                                Open on YouTube
+                            </a>
+                            <a id="music-sp-btn" href="#" target="_blank" rel="noopener" class="music-open-btn sp">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>                                Open on Spotify
+                            </a>
+                        </div>
+                        <div class="tip-txt" id="tip-txt">💡 Tip appears here</div>
+                    </div>
+                </div>
+                <div class="panel" style="flex:1;overflow-y:auto">
+                    <div class="ptitle">📝 Music History</div>
+                    <div id="music-hist"></div>
+                </div>
+                <div class="panel gp">
+                    <div class="ptitle">😊 Mood Frequency</div>
+                    <div id="mood-freq"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ═══════ RIGHT COL ═══════ -->
+        <div class="col">
+
+            <!-- Session analytics -->
+            <div class="panel">
+                <div class="ptitle">📋 Session Analytics</div>
+                <div class="mrow"><span class="mk">Session ID</span><span class="mv" id="sv-sid" style="color:var(--txt);font-size:.56rem">—</span></div>
+                <div class="mrow"><span class="mk">Uptime</span><span class="mv c" id="sv-uptime">00:00:00</span></div>
+                <div class="mrow"><span class="mk">WS State</span><span class="mv g" id="sv-ws">—</span></div>
+                <div class="mrow"><span class="mk">Events Rx</span><span class="mv c" id="sv-evts">0</span></div>
+                <div class="mrow"><span class="mk">Dominant Emo</span><span class="mv a" id="sv-dom">—</span></div>
+                <div class="mrow"><span class="mk">Positive Frames</span><span class="mv g" id="sv-pos">0</span></div>
+                <div class="mrow"><span class="mk">Negative Frames</span><span class="mv r" id="sv-neg">0</span></div>
+                <div class="mrow"><span class="mk">Voice Active</span><span class="mv p" id="sv-voice-active">NO</span></div>
+                <div class="brow">
+                    <button class="btn bc" id="btn-report" style="font-size:.54rem;padding:5px 9px">REPORT</button>
+                    <button class="btn ba" id="btn-recover" style="font-size:.54rem;padding:5px 9px">RECOVER</button>
+                    <button class="btn bp" id="btn-clear" style="font-size:.54rem;padding:5px 9px">CLEAR</button>
+                </div>
+            </div>
+
+            <!-- Conversation log -->
+            <div class="panel mp">
+                <div class="ptitle">💬 Conversation with Maitri</div>
+                <div id="conv-log"></div>
+                <div style="margin-top:4px;font-family:var(--font-mono);font-size:.6rem;color:var(--txt2)">
+                    Last heard: <span id="last-heard" style="color:var(--txt)">—</span>
+                </div>
+            </div>
+
+            <!-- Alert history -->
+            <div class="panel rp">
+                <div class="ptitle">⚠️ Alert History</div>
+                <div id="alert-hist"><span style="color:var(--txt3)">No alerts.</span></div>
+            </div>
+
+            <!-- Event log -->
+            <div class="panel">
+                <div class="ptitle">📟 Event Log</div>
+                <div id="event-log"></div>
+            </div>
+
+            <!-- Session report (hidden) -->
+            <div class="panel" id="report-panel" style="display:none">
+                <div class="ptitle">📄 Session Report</div>
+                <pre id="report-pre" style="font-family:var(--font-mono);font-size:.58rem;color:var(--txt2);white-space:pre-wrap;line-height:1.65;max-height:220px;overflow-y:auto"></pre>
+            </div>
+
+        </div>
+    </div>
+    <div id="alert-toast">ALERT</div>
+
+    <!-- ═══ EXIT BUTTON — position set by user ═══ -->
+    <button id="btn-exit" title="Exit MAITRI AI">✕ EXIT</button>
+    <a href="../home/home.html" class="nav-btn" data-tooltip="Home">
+        <i class="fa-solid fa-house"></i>
+    </a>
+    <!-- ═══ LANGUAGE PREFERENCE MODAL ═══ -->
+    <div id="lang-modal" class="lang-modal-overlay" style="display:none">
+        <div class="lang-modal">
+            <div class="lang-modal-avatar"><i class="fa-solid fa-robot"></i></div>
+            <div class="lang-modal-name">Maitri</div>
+            <div class="lang-modal-msg" id="lang-modal-msg">
+                Hello! Before we begin, tell me — what language of music speaks to your heart? I'll make sure every recommendation feels perfect for you. 💛
+            </div>
+            <div class="lang-grid">
+                <button class="lang-btn" data-lang="hindi">
+        <span class="flag">🇮🇳</span>Hindi / Bollywood
+      </button>
+                <button class="lang-btn" data-lang="punjabi">
+        <span class="flag">🎺</span>Punjabi / Bhangra
+      </button>
+                <button class="lang-btn" data-lang="tamil">
+        <span class="flag">🎵</span>Tamil / Kollywood
+      </button>
+                <button class="lang-btn" data-lang="telugu">
+        <span class="flag">🎶</span>Telugu / Tollywood
+      </button>
+                <button class="lang-btn" data-lang="marathi">
+        <span class="flag">🪘</span>Marathi
+      </button>
+                <button class="lang-btn" data-lang="bengali">
+        <span class="flag">🎸</span>Bengali / Bangla
+      </button>
+                <button class="lang-btn" data-lang="english">
+        <span class="flag">🌍</span>English / International
+      </button>
+                <button class="lang-btn" data-lang="other">
+        <span class="flag">🎼</span>Other / Mix
+      </button>
+            </div>
+            <button class="lang-confirm-btn" id="lang-confirm-btn" disabled>
+      Let's Go! <i class="fa-solid fa-robot"></i>
+    </button>
+        </div>
+    </div>
+
+    <script>
+        // @ts-nocheck
+        /* ════════════════════════════════════════
+           CONFIG & STATE
+        ════════════════════════════════════════ */
+        const API = 'http://localhost:5000',
+            WS_URL = 'http://localhost:5000';
+        const FRAME_MS = 900,
+            FETCH_TO = 12000,
+            MAX_BO = 8000,
+            BO_BASE = 500;
+
+        let sid = crypto.randomUUID(),
+            isRunning = false,
+            loopActive = false,
+            loopTimer = null;
+        let frameCount = 0,
+            evtsRx = 0,
+            alertsFired = 0,
+            errStreak = 0,
+            startTime = null;
+        let fpsCnt = 0,
+            fpsTmr = Date.now(),
+            socket = null,
+            camStream = null;
+        let curEmo = 'neutral',
+            prevEmo = '',
+            speechActive = false,
+            speechRecog = null;
+        let alwaysOn = true,
+            speechRestart = false,
+            voiceLoopOn = false;
+        let posFr = 0,
+            negFr = 0,
+            confHist = [],
+            emoHist = [],
+            moodCounts = {};
+        let alertLog = [],
+            musicLog = [],
+            focusHist = [],
+            typeTimer = null,
+            lastSpeech = '';
+        let moodShifts = 0;
+
+        const POS = ['happy', 'surprise'],
+            NEG = ['sad', 'angry', 'fear', 'disgust'];
+        const EC = {
+            happy: '#00ff87',
+            neutral: '#3a5a70',
+            sad: '#00b4d8',
+            fear: '#ffb700',
+            angry: '#ff3355',
+            surprise: '#c084fc',
+            disgust: '#a3e635'
+        };
+        const EM = {
+            happy: {
+                e: '😄',
+                c: '#00ff87'
+            },
+            sad: {
+                e: '😢',
+                c: '#00b4d8'
+            },
+            angry: {
+                e: '😠',
+                c: '#ff3355'
+            },
+            fear: {
+                e: '😨',
+                c: '#ffb700'
+            },
+            surprise: {
+                e: '😲',
+                c: '#c084fc'
+            },
+            disgust: {
+                e: '🤢',
+                c: '#a3e635'
+            },
+            neutral: {
+                e: '😐',
+                c: '#3a5a70'
+            },
+            fallback: {
+                e: '🔍',
+                c: '#00e5ff'
+            }
+        };
+        const EL = ['happy', 'neutral', 'sad', 'fear', 'angry', 'surprise', 'disgust'];
+
+        function GM(n) {
+            return EM[(n || '').toLowerCase()] || EM.fallback;
+        }
+
+        /* ════════════ CHARTS ════════════ */
+        var tlChart = new Chart(document.getElementById('tl-chart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    borderColor: '#00e5ff',
+                    backgroundColor: 'rgba(0,229,255,.06)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointBackgroundColor: [],
+                    tension: .4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 100
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(c) {
+                                return EL[Math.round(c.parsed.y)] || ''
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false
+                    },
+                    y: {
+                        min: 0,
+                        max: 6,
+                        ticks: {
+                            color: '#4a7a90',
+                            font: {
+                                family: 'Share Tech Mono',
+                                size: 8
+                            },
+                            callback: function(v) {
+                                return EL[v] ? EL[v].slice(0, 3).toUpperCase() : ''
+                            }
+                        },
+                        grid: {
+                            color: '#0a1824'
+                        }
+                    }
+                }
+            }
+        });
+        var confChart = new Chart(document.getElementById('conf-chart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    borderColor: '#ffc107',
+                    backgroundColor: 'rgba(255,193,7,.06)',
+                    borderWidth: 1.5,
+                    pointRadius: 2,
+                    tension: .4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 100
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false
+                    },
+                    y: {
+                        min: 0,
+                        max: 1,
+                        ticks: {
+                            color: '#4a7a90',
+                            font: {
+                                family: 'Share Tech Mono',
+                                size: 8
+                            },
+                            callback: function(v) {
+                                return (v * 100).toFixed(0) + '%'
+                            }
+                        },
+                        grid: {
+                            color: '#0a1824'
+                        }
+                    }
+                }
+            }
+        });
+        var pieChart = new Chart(document.getElementById('pie-chart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(c) {
+                                return c.label + ': ' + c.parsed.toFixed(1) + '%'
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 300
+                }
+            }
+        });
+        var barChart = new Chart(document.getElementById('bar-chart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [],
+                    borderRadius: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 200
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#4a7a90',
+                            font: {
+                                family: 'Share Tech Mono',
+                                size: 8
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#4a7a90',
+                            font: {
+                                family: 'Share Tech Mono',
+                                size: 8
+                            }
+                        },
+                        grid: {
+                            color: '#0a1824'
+                        }
+                    }
+                }
+            }
+        });
+
+        /* ════════════ HEATMAP ════════════ */
+        function initHeatmap() {
+            var g = document.getElementById('heatmap');
+            g.innerHTML = '';
+            for (var i = 0; i < 250; i++) {
+                var c = document.createElement('div');
+                c.className = 'hc';
+                c.id = 'hc' + i;
+                g.appendChild(c);
+            }
+            var leg = document.getElementById('hm-legend');
+            leg.innerHTML = '';
+            Object.keys(EC).forEach(function(k) {
+                var d = document.createElement('div');
+                d.className = 'hli';
+                d.innerHTML = '<div class="hld" style="background:' + EC[k] + '"></div>' + k.toUpperCase();
+                leg.appendChild(d);
+            });
+        }
+        initHeatmap();
+
+        function updateHeatmap(emo) {
+            emoHist.push(emo);
+            if (emoHist.length > 250) emoHist.shift();
+            for (var i = 0; i < 250; i++) {
+                var c = document.getElementById('hc' + i);
+                if (!c) continue;
+                var e = emoHist[i];
+                c.style.background = e ? (EC[e] || '#3a5a70') : 'var(--panel2)';
+                c.title = e || '';
+            }
+        }
+
+        /* ════════════ FOCUS RING ════════════ */
+        function setFocusRing(pct) {
+            var ci = document.getElementById('fr-c'),
+                vl = document.getElementById('fr-val');
+            var off = 214 - (214 * pct / 100),
+                col = pct >= 70 ? '#00ff87' : pct >= 40 ? '#ffc107' : '#ff3355';
+            ci.style.strokeDashoffset = off;
+            ci.style.stroke = col;
+            vl.textContent = pct + '%';
+            vl.style.color = col;
+        }
+
+        function updateFocusRing(focus) {
+            focusHist.push(focus === 'Focused' ? 100 : focus === 'Idle' ? 40 : 0);
+            if (focusHist.length > 20) focusHist.shift();
+            setFocusRing(Math.round(focusHist.reduce(function(a, b) {
+                return a + b;
+            }, 0) / focusHist.length));
+        }
+
+        /* ════════════ TABS ════════════ */
+        document.querySelectorAll('.tab').forEach(function(b) {
+            b.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(function(x) {
+                    x.classList.remove('on');
+                });
+                document.querySelectorAll('.pane').forEach(function(x) {
+                    x.classList.remove('on');
+                });
+                b.classList.add('on');
+                document.getElementById(b.getAttribute('data-tab')).classList.add('on');
+                setTimeout(function() {
+                    tlChart.resize();
+                    confChart.resize();
+                    pieChart.resize();
+                    barChart.resize();
+                }, 50);
+            });
+        });
+
+        /* ════════════ MAITRI SPEECH — TYPEWRITER ════════════ */
+        function setMaitriSpeech(text, moodChanged) {
+            if (!text || text === lastSpeech) return;
+            lastSpeech = text;
+            var el = document.getElementById('speech-txt');
+            if (!el) return;
+            clearTimeout(typeTimer);
+            setMVI(true);
+            var av = document.getElementById('maitri-avatar');
+            if (av) av.classList.add('talking');
+
+            if (moodChanged) {
+                var b = document.getElementById('mc-banner');
+                if (b) {
+                    b.classList.add('show');
+                    setTimeout(function() {
+                        b.classList.remove('show');
+                    }, 3500);
+                }
+                var el2 = document.getElementById('emo-left');
+                if (el2) {
+                    el2.classList.add('changed');
+                    setTimeout(function() {
+                        el2.classList.remove('changed');
+                    }, 800);
+                }
+                if (av) {
+                    av.style.boxShadow = '0 0 20px rgba(255,215,0,.7),0 0 40px rgba(255,182,193,.4)';
+                    setTimeout(function() {
+                        av.style.boxShadow = '';
+                        av.classList.remove('talking');
+                    }, 2000);
+                }
+            }
+
+            // Typewriter
+            el.textContent = '';
+            el.classList.add('typing');
+            var i = 0;
+
+            function tc() {
+                if (i < text.length) {
+                    el.textContent += text[i];
+                    i++;
+                    typeTimer = setTimeout(tc, i < 25 ? 28 : 18);
+                } else {
+                    el.classList.remove('typing');
+                    setMVI(false);
+                    if (av) av.classList.remove('talking');
+                }
+            }
+            tc();
+            logEvent('Maitri: ' + text.slice(0, 55) + (text.length > 55 ? '...' : ''), 'em');
+        }
+
+        function setMVI(on) {
+            document.querySelectorAll('.mvi span').forEach(function(s) {
+                s.classList.toggle('on', on);
+            });
+        }
+
+        function setAdvice(text) {
+            if (!text) return;
+            document.getElementById('advice-text').textContent = text;
+            document.getElementById('advice-box').classList.add('show');
+        }
+
+        function setMusic(music, tip) {
+            // music can be a dict {title, artist, youtube, spotify, display} or a plain string
+            var tag = document.getElementById('music-tag');
+            var col = EC[curEmo] || '#00e5ff';
+            tag.textContent = curEmo.toUpperCase();
+            tag.style.background = hexToRgba(col, .18);
+            tag.style.color = col;
+
+            var displayText, ytUrl, spUrl;
+            if (music && typeof music === 'object') {
+                displayText = music.display || (music.title + ' — ' + music.artist);
+                ytUrl = music.youtube || '#';
+                spUrl = music.spotify || '#';
+            } else {
+                displayText = music || '—';
+                // Build search URLs from plain text
+                var q = encodeURIComponent(displayText.replace(/🎵\s*/, ''));
+                ytUrl = 'https://www.youtube.com/results?search_query=' + q;
+                spUrl = 'https://open.spotify.com/search/' + q;
+            }
+
+            document.getElementById('music-txt').textContent = displayText;
+
+            // Set button URLs
+            var ytBtn = document.getElementById('music-yt-btn');
+            var spBtn = document.getElementById('music-sp-btn');
+            var btns = document.getElementById('music-open-btns');
+            if (ytBtn) ytBtn.href = ytUrl;
+            if (spBtn) spBtn.href = spUrl;
+            if (btns) btns.style.display = 'flex';
+
+            if (tip) document.getElementById('tip-txt').textContent = '💡 ' + tip;
+
+            var ts = new Date().toLocaleTimeString('en-US', {
+                hour12: false
+            });
+            musicLog.unshift({
+                emo: curEmo,
+                display: displayText,
+                ytUrl: ytUrl,
+                spUrl: spUrl,
+                ts: ts
+            });
+            if (musicLog.length > 20) musicLog.pop();
+            renderMusicHist();
+        }
+
+        function hexToRgba(hex, alpha) {
+            var r = parseInt(hex.slice(1, 3), 16),
+                g = parseInt(hex.slice(3, 5), 16),
+                b = parseInt(hex.slice(5, 7), 16);
+            return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+        }
+
+        function renderMusicHist() {
+            var el = document.getElementById('music-hist');
+            el.innerHTML = musicLog.map(function(m) {
+                var meta = GM(m.emo);
+                var col = EC[m.emo] || '#00e5ff';
+                return '<div class="music-hist-item" style="border-left:2px solid ' + col + ';padding:6px 9px;background:var(--panel2);border-radius:3px;margin-bottom:5px">' +
+                    '<div style="font-family:var(--font-mono);font-size:.55rem;color:var(--txt2)">' + m.ts + ' ' + meta.e + ' ' + m.emo.toUpperCase() + '</div>' +
+                    '<div style="font-family:var(--font-soft);font-size:.68rem;color:var(--txt);margin-top:2px;font-weight:500">' + m.display + '</div>' +
+                    '<div style="display:flex;gap:5px;margin-top:5px">' +
+                    '<a href="' + m.ytUrl + '" target="_blank" rel="noopener" style="flex:2;display:flex;align-items:center;justify-content:center;gap:4px;padding:5px 10px;border-radius:3px;background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff;font-family:var(--font-hud);font-size:.54rem;font-weight:700;text-decoration:none;transition:all .2s">▶ Play on YouTube</a>' +
+                    '<a href="' + m.spUrl + '" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:5px 8px;border-radius:3px;border:1px solid rgba(29,185,84,.4);color:#1db954;font-family:var(--font-hud);font-size:.5rem;text-decoration:none;background:rgba(29,185,84,.08);transition:all .2s">♪ Spotify</a>' +
+                    '</div></div>';
+            }).join('');
+        }
+
+        function updateAIBadge(provider, powered) {
+            var b = document.getElementById('ai-badge');
+            if (!b) return;
+            b.className = provider || '';
+            b.textContent = powered && provider && provider !== 'fallback' ?
+                '✨ ' + provider.toUpperCase() + ' AI' :
+                '⚙ Built-in responses';
+        }
+
+        // ─── ALWAYS-ON SPEECH — BULLETPROOF ─────────────────────────────────────────
+        // Fixes: silent death after ~60s, Chrome aborted race, no restart on error,
+        //        recognizer stale state, permission errors handled gracefully
+        var SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+        var _restartTimer = null;
+        var _watchdogTimer = null;
+        var _sttAttempts = 0;
+
+        function initSpeech() {
+            if (!SpeechAPI) {
+                logEvent('Browser STT unavailable — use text input to talk to Maitri', 'warn');
+                return;
+            }
+            _buildRecog();
+            if (alwaysOn) _startSTT();
+            updateMicBtn();
+            // Watchdog: check every 8s — if supposed to be on but isn't, restart
+            _watchdogTimer = setInterval(function() {
+                if (alwaysOn && isRunning && !speechActive && !speechRestart) {
+                    logEvent('STT watchdog: mic went silent — restarting...', 'warn');
+                    _startSTT();
+                }
+            }, 8000);
+        }
+
+        function _buildRecog() {
+            // Always build a fresh SpeechRecognition object — reusing stale ones causes Chrome errors
+            try {
+                if (speechRecog) speechRecog.abort();
+            } catch (e) {}
+            var R = new SpeechAPI();
+            R.continuous = false; // false is more reliable cross-browser
+            R.interimResults = true;
+            R.lang = 'en-US';
+            R.maxAlternatives = 1;
+
+            R.onstart = function() {
+                speechActive = true;
+                _sttAttempts = 0;
+                document.getElementById('waveform').classList.add('on');
+                document.getElementById('vs-txt').textContent = 'Maitri is listening...';
+                document.getElementById('mic-btn').classList.add('rec');
+                document.getElementById('voice-pill').className = 'pill listening';
+                document.getElementById('voice-pill').textContent = 'LISTENING';
+                document.getElementById('sv-voice-active').textContent = 'YES';
+            };
+
+            R.onresult = function(e) {
+                var interim = '',
+                    final = '';
+                for (var i = e.resultIndex; i < e.results.length; i++) {
+                    if (e.results[i].isFinal) final += e.results[i][0].transcript;
+                    else interim += e.results[i][0].transcript;
+                }
+                var text = final || interim;
+                // Echo guard: if Maitri is speaking or we're in the mute window, ignore
+                if (Date.now() < _maitriSpeakingUntil) {
+                    logEvent('Echo guard: ignored mic during Maitri speech', 'warn');
+                    return;
+                }
+                document.getElementById('stt-input').value = text;
+                document.getElementById('spoken-txt').textContent = text;
+                document.getElementById('last-heard').textContent = text;
+                if (final && final.trim()) {
+                    sendText(final.trim());
+                }
+            };
+
+            R.onerror = function(e) {
+                // These are normal — don't log or restart for them
+                if (e.error === 'no-speech' || e.error === 'aborted') return;
+                if (e.error === 'not-allowed') {
+                    logEvent('Microphone permission denied — please allow mic access', 'error');
+                    alwaysOn = false;
+                    updateMicBtn();
+                    return;
+                }
+                if (e.error === 'network') {
+                    logEvent('STT network error — will retry', 'warn');
+                    return;
+                }
+                logEvent('STT error: ' + e.error + ' — retrying in 1s', 'warn');
+            };
+
+            R.onend = function() {
+                speechActive = false;
+                document.getElementById('mic-btn').classList.remove('rec');
+                document.getElementById('waveform').classList.remove('on');
+
+                // If we should be on, schedule restart with exponential back-off
+                if (alwaysOn && isRunning) {
+                    clearTimeout(_restartTimer);
+                    speechRestart = true;
+                    document.getElementById('vs-txt').textContent = 'Restarting mic...';
+                    document.getElementById('voice-pill').textContent = 'RESTARTING';
+                    // Fast at first, slower if keeps failing (avoids Chrome rapid-restart ban)
+                    var delay = _sttAttempts <= 2 ? 350 : _sttAttempts <= 6 ? 900 : 2500;
+                    _restartTimer = setTimeout(function() {
+                        speechRestart = false;
+                        _startSTT();
+                    }, delay);
+                } else {
+                    _setMicIdle();
+                }
+            };
+
+            speechRecog = R;
+        }
+
+        function _startSTT() {
+            if (!SpeechAPI || !alwaysOn || !isRunning) return;
+            _sttAttempts++;
+            // Rebuild the recognizer object after the first attempt to avoid stale-state errors
+            if (_sttAttempts > 1) _buildRecog();
+            try {
+                speechRecog.start();
+            } catch (err) {
+                // "InvalidStateError: recognition has already started" — just ignore
+                if (err.name === 'InvalidStateError') return;
+                logEvent('STT start error: ' + err.message, 'warn');
+                // Back off and try again
+                setTimeout(function() {
+                    if (alwaysOn && isRunning && !speechActive) _startSTT();
+                }, 1500);
+            }
+        }
+
+        function _setMicIdle() {
+            document.getElementById('vs-txt').textContent = 'Mic off';
+            document.getElementById('voice-pill').className = 'pill';
+            document.getElementById('voice-pill').textContent = 'MIC OFF';
+            document.getElementById('sv-voice-active').textContent = 'NO';
+            speechRestart = false;
+        }
+
+        function updateMicBtn() {
+            var b = document.getElementById('mic-btn');
+            b.classList.toggle('on', alwaysOn);
+            if (!alwaysOn) b.classList.remove('rec');
+        }
+
+        function toggleAlwaysOn() {
+            alwaysOn = !alwaysOn;
+            if (alwaysOn) {
+                logEvent('Always-on mic activated — Maitri is listening', 'good');
+                _sttAttempts = 0;
+                _startSTT();
+            } else {
+                clearTimeout(_restartTimer);
+                speechRestart = false;
+                try {
+                    speechRecog && speechRecog.abort();
+                } catch (e) {}
+                logEvent('Mic paused by user', 'warn');
+                _setMicIdle();
+            }
+            updateMicBtn();
+        }
+
+        function sendText(text) {
+            if (!text.trim()) return;
+            addConv('user', text.trim());
+            document.getElementById('stt-input').value = '';
+            setMaitriSpeech('Maitri is thinking...', false);
+            setMVI(true);
+            if (socket && socket.connected) {
+                socket.emit('client_transcript', {
+                    session_id: sid,
+                    text: text.trim(),
+                    emotion: curEmo
+                });
+                logEvent('You: ' + text.trim(), 'info');
+            } else logEvent('Socket not connected', 'warn');
+        }
+
+        /* ════════════ WEBSOCKET ════════════ */
+        function connectSocket() {
+            if (socket && socket.connected) return;
+            socket = io(WS_URL, {
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionAttempts: Infinity,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                timeout: 10000
+            });
+
+            socket.on('connect', function() {
+                socket.emit('join', {
+                    session_id: sid
+                });
+                setWsUI(true);
+                logEvent('Connected to Maitri server', 'good');
+            });
+            socket.on('disconnect', function(r) {
+                setWsUI(false);
+                logEvent('Connection lost: ' + r, 'warn');
+            });
+            socket.on('reconnect', function(n) {
+                socket.emit('join', {
+                    session_id: sid
+                });
+                setWsUI(true);
+                logEvent('Reconnected (' + n + ')', 'good');
+            });
+
+            socket.on('analysis_update', function(d) {
+                evtsRx++;
+                document.getElementById('sv-evts').textContent = evtsRx;
+                applyData(d);
+            });
+
+            socket.on('voice_update', function(d) {
+                if (d.voice_status) {
+                    document.getElementById('vs-txt').textContent =
+                        d.voice_status === 'speaking' ? 'Maitri is speaking...' :
+                        d.voice_status === 'Listening...' ? 'Maitri is listening...' :
+                        d.voice_status;
+                    var isSpk = d.voice_status === 'speaking';
+                    document.getElementById('waveform').classList.toggle('on', isSpk || d.voice_status.indexOf('Listen') !== -1);
+                    setMVI(isSpk);
+                    document.getElementById('voice-pill').className = 'pill ' + (isSpk ? 'speaking' : d.voice_status.indexOf('Listen') !== -1 ? 'listening' : '');
+                    document.getElementById('voice-pill').textContent = isSpk ? 'SPEAKING' : d.voice_status.indexOf('Listen') !== -1 ? 'LISTENING' : 'PROCESSING';
+                }
+                if (d.spoken_text) {
+                    document.getElementById('spoken-txt').textContent = d.spoken_text;
+                    document.getElementById('last-heard').textContent = d.spoken_text;
+                }
+                if (d.ai_reply) {
+                    setMaitriSpeech(d.ai_reply, d.mood_changed || false);
+                    addConv('maitri', d.ai_reply);
+                    // Mute mic for estimated TTS duration + 1.5s hardware drain buffer
+                    var wc = (d.ai_reply.match(/\S+/g) || []).length;
+                    var muteMs = Math.max(3000, (wc / 145) * 60000) + 1500;
+                    _maitriSpeakingUntil = Date.now() + muteMs;
+                    logEvent('Mic muted for ' + Math.round(muteMs / 1000) + 's while Maitri speaks', 'info');
+                }
+                if (d.music_rec) setMusic(d.music_rec, d.tip || '');
+                if (d.music_lang) updateLangBadge(d.music_lang);
+                if (d.ask_language) {
+                    // Show language modal after a short delay so greeting speech starts first
+                    setTimeout(function() {
+                        showLangModal("What language of music do you enjoy? Choose below and I'll personalise every recommendation for you. 🎵");
+                    }, 2500);
+                }
+                if (d.mood_label) document.getElementById('emo-mood').textContent = d.mood_label;
+                if (d.ai_powered !== undefined) updateAIBadge(d.ai_provider, d.ai_powered);
+                if (d.tip) setAdvice(d.tip);
+            });
+
+            socket.on('session_health', function(d) {
+                logEvent('Health: ' + d.status + ' — ' + d.reason, d.status === 'active' ? 'good' : 'warn');
+                document.getElementById('sv-status').textContent = d.status.toUpperCase();
+                if (d.status === 'stale' || d.status === 'degraded') recoverSession();
+            });
+
+            socket.on('heartbeat', function() {
+                document.getElementById('sv-status').textContent = 'ACTIVE';
+            });
+            socket.on('language_update', function(d) {
+                if (d.lang) {
+                    _selectedLang = d.lang;
+                    updateLangBadge(d.lang);
+                    logEvent('Language preference: ' + d.lang_display, 'good');
+                }
+            });
+        }
+
+        function setWsUI(on) {
+            document.getElementById('sv-ws').textContent = on ? 'CONNECTED' : 'RECONNECTING';
+            document.getElementById('sv-ws').className = 'mv ' + (on ? 'g' : 'a');
+            document.getElementById('ws-pill').className = 'pill' + (on ? ' on' : '');
+            document.getElementById('ws-pill').textContent = on ? 'WS: LIVE' : 'WS: ...';
+        }
+
+        /* ════════════ CAMERA + LOOP ════════════ */
+        async function startCam() {
+            try {
+                if (camStream) camStream.getTracks().forEach(function(t) {
+                    t.stop();
+                });
+                camStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: {
+                            ideal: 640
+                        },
+                        height: {
+                            ideal: 480
+                        },
+                        facingMode: 'user'
+                    }
+                });
+                var v = document.getElementById('video');
+                v.srcObject = camStream;
+                await new Promise(function(r) {
+                    if (v.readyState >= 2) return r();
+                    v.onloadeddata = r;
+                });
+                logEvent('Camera ready', 'good');
+                return true;
+            } catch (e) {
+                logEvent('Camera: ' + e.message, 'error');
+                return false;
+            }
+        }
+
+        function captureFrame() {
+            var v = document.getElementById('video'),
+                w = v.videoWidth || 640,
+                h = v.videoHeight || 480;
+            var c = document.createElement('canvas');
+            c.width = w;
+            c.height = h;
+            c.getContext('2d').drawImage(v, 0, 0, w, h);
+            return new Promise(function(res, rej) {
+                c.toBlob(function(b) {
+                    if (!b || b.size < 500) rej(new Error('blank'));
+                    else res(b);
+                }, 'image/jpeg', .82);
+            });
+        }
+
+        async function fetchTO(url, opts, ms) {
+            var ctrl = new AbortController(),
+                t = setTimeout(function() {
+                    ctrl.abort();
+                }, ms || FETCH_TO);
+            opts.signal = ctrl.signal;
+            try {
+                var r = await fetch(url, opts);
+                clearTimeout(t);
+                return r;
+            } catch (e) {
+                clearTimeout(t);
+                throw e;
+            }
+        }
+
+        function schedNext(d) {
+            if (!isRunning) {
+                loopActive = false;
+                return;
+            }
+            loopTimer = setTimeout(runLoop, d);
+        }
+
+        function boDel() {
+            return Math.min(BO_BASE * Math.pow(2, Math.min(errStreak - 1, 6)), MAX_BO);
+        }
+
+        async function runLoop() {
+            if (!isRunning) {
+                loopActive = false;
+                return;
+            }
+            loopActive = true;
+            try {
+                var blob;
+                try {
+                    blob = await captureFrame();
+                } catch (e) {
+                    errStreak++;
+                    logEvent('Capture: ' + e.message, 'warn');
+                    schedNext(boDel());
+                    return;
+                }
+
+                var fd = new FormData();
+                fd.append('image', blob, 'frame.jpg');
+                var res = await fetchTO(API + '/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'X-Session-ID': sid
+                    },
+                    body: fd
+                });
+
+                if (!res.ok) {
+                    errStreak++;
+                    var t = await res.text().catch(function() {
+                        return '';
+                    });
+                    logEvent('Server ' + res.status + ': ' + t.slice(0, 50), 'warn');
+                    schedNext(boDel());
+                    return;
+                }
+
+                var data = await res.json();
+                errStreak = 0;
+                frameCount++;
+                fpsCnt++;
+
+                var now = Date.now();
+                if (now - fpsTmr >= 1000) {
+                    document.getElementById('hdr-fps').textContent = fpsCnt;
+                    document.getElementById('fps-disp').textContent = fpsCnt + ' FPS';
+                    fpsCnt = 0;
+                    fpsTmr = now;
+                }
+                document.getElementById('fc').textContent = frameCount;
+                document.getElementById('hdr-frames').textContent = frameCount;
+                if (data.detection_ms) {
+                    document.getElementById('det-ms').textContent = data.detection_ms;
+                    document.getElementById('hdr-det').textContent = data.detection_ms + 'ms';
+                }
+                document.getElementById('live-dot').className = 'ldot on';
+                document.getElementById('status-txt').textContent = 'LIVE';
+
+                applyData(data);
+                drawOverlay(data);
+                schedNext(FRAME_MS);
+            } catch (e) {
+                errStreak++;
+                var d = boDel();
+                logEvent((e.name === 'AbortError' ? 'Timeout' : 'Net: ' + e.message) + ' retry ' + d + 'ms', 'error');
+                document.getElementById('status-txt').textContent = 'RETRY';
+                document.getElementById('live-dot').className = 'ldot';
+                schedNext(d);
+            }
+        }
+
+        /* ════════════ APPLY DATA ════════════ */
+        function applyData(data) {
+            var meta = GM(data.emotion);
+            curEmo = data.emotion || 'neutral';
+            var elow = curEmo.toLowerCase();
+
+            // Header
+            document.getElementById('hdr-emo').textContent = curEmo.toUpperCase();
+            document.getElementById('hdr-emo').style.color = meta.c;
+
+            // Mood shift banner
+            if (data.mood_changed) {
+                moodShifts++;
+                document.getElementById('hdr-shifts').textContent = moodShifts;
+                document.getElementById('sv-shifts').textContent = moodShifts;
+                var banner = document.getElementById('mc-banner');
+                var prevLabel = prevEmo ? prevEmo.toUpperCase() : '?';
+                banner.textContent = '✨ ' + prevLabel + ' → ' + curEmo.toUpperCase() + ' ' + meta.e + ' — Maitri is responding...';
+                banner.classList.add('show');
+                setTimeout(function() {
+                    banner.classList.remove('show');
+                }, 3500);
+            }
+            prevEmo = elow;
+            if (data.mood_change_count != null) {
+                document.getElementById('hdr-shifts').textContent = data.mood_change_count;
+                document.getElementById('sv-shifts').textContent = data.mood_change_count;
+            }
+
+            // Emotion card
+            document.getElementById('emo-emoji').textContent = meta.e;
+            var lbl = document.getElementById('emo-lbl');
+            lbl.textContent = curEmo.toUpperCase();
+            lbl.style.color = meta.c;
+            document.getElementById('emo-conf').textContent = data.confidence != null ? 'CONF: ' + (data.confidence * 100).toFixed(0) + '%' : 'CONF: —';
+            if (data.mood_label) document.getElementById('emo-mood').textContent = data.mood_label;
+
+            // Stat cards
+            setSC('sv-state', data.state, sC(data.state));
+            setSC('sv-focus', data.focus, fC(data.focus));
+            setSC('sv-fatigue', data.fatigue, faC(data.fatigue));
+            setSC('sv-behavior', data.behavior, 'p');
+            document.getElementById('sv-raw').textContent = data.raw_emotion || '—';
+            if (data.alert_count != null) document.getElementById('sv-alerts').textContent = data.alert_count;
+            updateFocusRing(data.focus || 'Unknown');
+
+            // Pos/neg
+            if (POS.indexOf(elow) !== -1) {
+                posFr++;
+                document.getElementById('sv-pos').textContent = posFr;
+            } else if (NEG.indexOf(elow) !== -1) {
+                negFr++;
+                document.getElementById('sv-neg').textContent = negFr;
+            }
+
+            // Avg conf
+            if (data.confidence != null) {
+                confHist.push(data.confidence);
+                if (confHist.length > 100) confHist.shift();
+                document.getElementById('sv-conf').textContent = (confHist.reduce(function(a, b) {
+                    return a + b;
+                }, 0) / confHist.length * 100).toFixed(0) + '%';
+            }
+
+            if (elow && elow !== 'no face detected') moodCounts[elow] = (moodCounts[elow] || 0) + 1;
+
+            // Maitri's reply (from HTTP — shown only if not already from WS)
+            if (data.reply && data.voice_status !== 'speaking') {
+                setMaitriSpeech(data.reply, data.mood_changed || false);
+                var wc2 = (data.reply.match(/\S+/g) || []).length;
+                _maitriSpeakingUntil = Date.now() + Math.max(3000, (wc2 / 145) * 60000) + 1500;
+            }
+            if (data.voice_status) {
+                var isSpk = data.voice_status === 'speaking';
+                document.getElementById('vs-txt').textContent = isSpk ? 'Maitri is speaking...' : data.voice_status;
+                document.getElementById('waveform').classList.toggle('on', isSpk);
+            }
+            if (data.spoken_text) document.getElementById('spoken-txt').textContent = data.spoken_text;
+            if (data.music_rec) setMusic(data.music_rec, data.tip || '');
+            if (data.ai_provider) updateAIBadge(data.ai_provider, true);
+
+            // Alert
+            if (data.alert) {
+                alertsFired++;
+                document.getElementById('sv-alerts').textContent = alertsFired;
+                showAlert(data.alert);
+                addAlertLog(data.alert);
+            }
+
+            // Charts
+            var idx = EL.indexOf(elow);
+            if (idx >= 0) {
+                var tds = tlChart.data;
+                tds.labels.push('');
+                tds.datasets[0].data.push(idx);
+                tds.datasets[0].pointBackgroundColor.push(meta.c);
+                if (tds.labels.length > 60) {
+                    tds.labels.shift();
+                    tds.datasets[0].data.shift();
+                    tds.datasets[0].pointBackgroundColor.shift();
+                }
+                tlChart.update('none');
+            }
+            if (data.confidence != null) {
+                var cds = confChart.data;
+                cds.labels.push('');
+                cds.datasets[0].data.push(data.confidence);
+                if (cds.labels.length > 60) {
+                    cds.labels.shift();
+                    cds.datasets[0].data.shift();
+                }
+                confChart.update('none');
+            }
+            if (data.all_emotions && Object.keys(data.all_emotions).length) renderProbs(data.all_emotions);
+            if (data.trend && Object.keys(data.trend).length) renderTrend(data.trend);
+            if (elow && elow !== 'no face detected') updateHeatmap(elow);
+            renderMoodFreq();
+            if (data.trend) {
+                var en = Object.entries(data.trend).sort(function(a, b) {
+                    return b[1] - a[1];
+                });
+                if (en.length) document.getElementById('sv-dom').textContent = en[0][0].toUpperCase();
+            }
+            if (frameCount % 12 === 0) logEvent(curEmo + ' | ' + (data.state || '') + ' | ' + (data.focus || '') + ' | ' + (data.behavior || ''), 'info');
+        }
+
+        function setSC(id, v, cls) {
+            var el = document.getElementById(id);
+            el.textContent = v || '—';
+            el.className = 'sv ' + (cls || '');
+        }
+
+        function sC(s) {
+            return {
+                'High Stress': 'r',
+                'Aggressive': 'r',
+                'Anxious': 'a',
+                'Positive': 'g',
+                'Stimulated': 'c',
+                'Stable': 'c'
+            }[s] || 'c';
+        }
+
+        function fC(f) {
+            return f === 'Focused' ? 'g' : f === 'Idle' ? 'a' : 'r';
+        }
+
+        function faC(f) {
+            return (!f || f === 'Unknown') ? '' : f === 'Awake' ? 'g' : f === 'Drowsy' ? 'a' : 'r';
+        }
+
+        function renderProbs(emos) {
+            var w = document.getElementById('prob-bars');
+            w.innerHTML = '';
+            Object.entries(emos).sort(function(a, b) {
+                return b[1] - a[1];
+            }).forEach(function(en) {
+                var n = en[0],
+                    v = en[1];
+                var pct = typeof v === 'number' ? (v > 1 ? v : v * 100) : 0;
+                var col = EC[n.toLowerCase()] || '#00e5ff';
+                var meta = GM(n);
+                var r = document.createElement('div');
+                r.className = 'prob-row';
+                r.innerHTML = '<span class="prob-name">' + meta.e + ' ' + n.toUpperCase() + '</span><div class="prob-track"><div class="prob-fill" style="width:' + Math.min(pct, 100).toFixed(1) + '%;background:' + col + '"></div></div><span class="prob-pct" style="color:' + col + '">' + pct.toFixed(0) + '%</span>';
+                w.appendChild(r);
+            });
+        }
+
+        function renderTrend(trend) {
+            var w = document.getElementById('trend-bars');
+            w.innerHTML = '';
+            var ls = [],
+                vs = [],
+                cs = [];
+            Object.entries(trend).sort(function(a, b) {
+                return b[1] - a[1];
+            }).forEach(function(en) {
+                var n = en[0],
+                    v = en[1];
+                var col = EC[n] || '#00e5ff';
+                var meta = GM(n);
+                var r = document.createElement('div');
+                r.className = 'tr-row';
+                r.innerHTML = '<span class="tr-name">' + meta.e + ' ' + n.toUpperCase() + '</span><div class="tr-track"><div class="tr-fill" style="width:' + v + '%;background:' + col + '"></div></div><span class="tr-pct" style="color:' + col + '">' + v + '%</span>';
+                w.appendChild(r);
+                ls.push(n);
+                vs.push(v);
+                cs.push(col);
+            });
+            pieChart.data.labels = ls;
+            pieChart.data.datasets[0].data = vs;
+            pieChart.data.datasets[0].backgroundColor = cs;
+            pieChart.update('none');
+            document.getElementById('pie-legend').innerHTML = ls.map(function(l, i) {
+                return '<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px"><div style="width:7px;height:7px;border-radius:50%;background:' + cs[i] + ';flex-shrink:0"></div><span style="font-family:var(--font-soft);font-size:.63rem;color:var(--txt2)">' + l.toUpperCase() + ' <strong style="color:var(--txt)">' + vs[i] + '%</strong></span></div>';
+            }).join('');
+            var bk = Object.keys(moodCounts),
+                bv = bk.map(function(k) {
+                    return moodCounts[k];
+                }),
+                bc = bk.map(function(k) {
+                    return EC[k] || '#00e5ff';
+                });
+            barChart.data.labels = bk.map(function(k) {
+                return k.toUpperCase();
+            });
+            barChart.data.datasets[0].data = bv;
+            barChart.data.datasets[0].backgroundColor = bc;
+            barChart.update('none');
+        }
+
+        function renderMoodFreq() {
+            var el = document.getElementById('mood-freq');
+            el.innerHTML = '';
+            var tot = Object.values(moodCounts).reduce(function(a, b) {
+                return a + b;
+            }, 0) || 1;
+            Object.entries(moodCounts).sort(function(a, b) {
+                return b[1] - a[1];
+            }).forEach(function(en) {
+                var n = en[0],
+                    cnt = en[1];
+                var pct = (cnt / tot * 100).toFixed(1);
+                var col = EC[n] || '#00e5ff';
+                var meta = GM(n);
+                var r = document.createElement('div');
+                r.className = 'mood-freq-item';
+                r.style.borderLeft = '2px solid ' + col;
+                r.innerHTML = '<span style="font-size:.85rem">' + meta.e + '</span><span style="font-family:var(--font-soft);font-size:.66rem;color:var(--txt);width:68px;font-weight:600">' + n.toUpperCase() + '</span><div style="flex:1;height:5px;background:#0b1f30;border-radius:3px;overflow:hidden"><div style="height:100%;background:' + col + ';width:' + pct + '%;transition:width .5s"></div></div><span style="font-family:var(--font-hud);font-size:.6rem;color:' + col + ';width:26px;text-align:right">' + cnt + '</span>';
+                el.appendChild(r);
+            });
+        }
+
+        function drawOverlay(data) {
+            var cv = document.getElementById('overlay-canvas'),
+                vd = document.getElementById('video');
+            cv.width = vd.videoWidth || 640;
+            cv.height = vd.videoHeight || 480;
+            var ctx = cv.getContext('2d');
+            ctx.clearRect(0, 0, cv.width, cv.height);
+            var bbs = data.bounding_boxes;
+            if (!bbs || !bbs.length) return;
+            var meta = GM(data.emotion);
+            bbs.forEach(function(bb) {
+                if (!bb) return;
+                var x = bb[0],
+                    y = bb[1],
+                    w = bb[2],
+                    h = bb[3];
+                ctx.strokeStyle = meta.c;
+                ctx.lineWidth = 2;
+                ctx.shadowColor = meta.c;
+                ctx.shadowBlur = 14;
+                ctx.strokeRect(x, y, w, h);
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = meta.c + 'cc';
+                ctx.fillRect(x, y - 22, w, 22);
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 11px "Share Tech Mono"';
+                var lbl = curEmo.toUpperCase();
+                if (data.confidence != null) lbl += ' ' + Math.round(data.confidence * 100) + '%';
+                ctx.fillText(lbl, x + 4, y - 6);
+            });
+        }
+
+        function addConv(role, text) {
+            var log = document.getElementById('conv-log');
+            var div = document.createElement('div');
+            div.className = 'cb ' + role;
+            var ts = new Date().toLocaleTimeString('en-US', {
+                hour12: false
+            });
+            div.innerHTML = '<div class="bt">' + text + '</div><div class="bm">' + (role === 'maitri' ? 'Maitri' : 'You') + ' &middot; ' + ts + '</div>';
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function addAlertLog(msg) {
+            var ts = new Date().toLocaleTimeString('en-US', {
+                hour12: false
+            });
+            alertLog.unshift({
+                msg: msg,
+                ts: ts
+            });
+            if (alertLog.length > 20) alertLog.pop();
+            document.getElementById('alert-hist').innerHTML = alertLog.map(function(a) {
+                return '<div class="ah"><span class="ah-ts">' + a.ts + '</span><span class="ah-msg">' + a.msg + '</span></div>';
+            }).join('');
+        }
+
+        var alertTmr = null;
+
+        function showAlert(msg) {
+            var t = document.getElementById('alert-toast');
+            t.textContent = '⚠ ' + msg;
+            t.classList.add('show');
+            clearTimeout(alertTmr);
+            alertTmr = setTimeout(function() {
+                t.classList.remove('show');
+            }, 4500);
+            logEvent('ALERT: ' + msg, 'warn');
+        }
+
+        function logEvent(msg, lvl) {
+            var log = document.getElementById('event-log'),
+                ts = new Date().toLocaleTimeString('en-US', {
+                    hour12: false
+                });
+            var div = document.createElement('div');
+            div.className = 'evr';
+            var cls = lvl === 'warn' ? 'ew' : lvl === 'error' ? 'ee' : lvl === 'good' ? 'eg' : lvl === 'em' ? 'em' : '';
+            div.innerHTML = '<span class="ev-ts">' + ts + '</span><span class="' + cls + '">' + msg + '</span>';
+            log.prepend(div);
+            while (log.children.length > 300) log.removeChild(log.lastChild);
+        }
+
+        async function recoverSession() {
+            try {
+                await fetch(API + '/session/' + sid + '/recover', {
+                    method: 'POST',
+                    headers: {
+                        'X-Session-ID': sid
+                    }
+                });
+                logEvent('Session recovered', 'good');
+            } catch (e) {}
+        }
+
+        function fetchAIStatus() {
+            fetch(API + '/ai-status').then(function(r) {
+                return r.json();
+            }).then(function(d) {
+                var b = document.getElementById('ai-badge');
+                b.className = d.provider === 'fallback' ? '' : d.provider;
+                b.textContent = d.provider === 'fallback' ? '⚙ Built-in responses' : '✨ ' + d.provider.toUpperCase() + ' AI active';
+                logEvent('AI: ' + d.message, 'good');
+            }).catch(function(e) {
+                logEvent('AI status: ' + e.message, 'warn');
+            });
+        }
+
+        setInterval(function() {
+            document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-US', {
+                hour12: false
+            });
+            if (startTime) {
+                var s = Math.floor((Date.now() - startTime) / 1000);
+                var hh = String(Math.floor(s / 3600)).padStart(2, '0'),
+                    mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0'),
+                    ss = String(s % 60).padStart(2, '0');
+                var up = hh + ':' + mm + ':' + ss;
+                document.getElementById('sv-uptime').textContent = up;
+                document.getElementById('hdr-uptime').textContent = up;
+            }
+        }, 1000);
+
+        function takeShot() {
+            var v = document.getElementById('video'),
+                c = document.createElement('canvas');
+            c.width = v.videoWidth || 640;
+            c.height = v.videoHeight || 480;
+            c.getContext('2d').drawImage(v, 0, 0);
+            var a = document.createElement('a');
+            a.download = 'maitri-' + Date.now() + '.jpg';
+            a.href = c.toDataURL('image/jpeg', .92);
+            a.click();
+            logEvent('Screenshot saved', 'good');
+        }
+
+        /* ════════════ BUTTONS ════════════ */
+        document.getElementById('btn-start').addEventListener('click', async function() {
+            if (isRunning) return;
+            var ok = await startCam();
+            if (!ok) return;
+            connectSocket();
+            fetchAIStatus();
+            isRunning = true;
+            startTime = Date.now();
+            errStreak = 0;
+            document.getElementById('sv-sid').textContent = sid.slice(0, 20) + '...';
+            document.getElementById('sid-hdr').textContent = 'SID: ' + sid.slice(0, 8);
+            document.getElementById('sv-status').textContent = 'ACTIVE';
+            document.getElementById('status-txt').textContent = 'STARTING';
+            setMaitriSpeech("I'm starting up now... Give me just a moment to see you properly. 🌸", false);
+
+            // Init always-on speech AFTER short delay (camera needs to settle)
+            setTimeout(function() {
+                initSpeech();
+            }, 1500);
+
+            logEvent('Session started: ' + sid.slice(0, 8), 'good');
+            if (!loopActive) runLoop();
+        });
+
+        document.getElementById('btn-stop').addEventListener('click', function() {
+            isRunning = false;
+            clearTimeout(loopTimer);
+            loopActive = false;
+            alwaysOn = false;
+            clearTimeout(_restartTimer);
+            clearInterval(_watchdogTimer);
+            try {
+                speechRecog && speechRecog.abort();
+            } catch (e) {}
+            document.getElementById('live-dot').className = 'ldot';
+            document.getElementById('status-txt').textContent = 'STOPPED';
+            document.getElementById('sv-status').textContent = 'STOPPED';
+            document.getElementById('mic-btn').classList.remove('on', 'rec');
+            document.getElementById('voice-pill').className = 'pill';
+            document.getElementById('voice-pill').textContent = 'MIC OFF';
+            document.getElementById('sv-voice-active').textContent = 'NO';
+            setMaitriSpeech("I'm pausing now. Take good care of yourself, okay? I'll be right here whenever you need me. 💛", false);
+            logEvent('Detection stopped', 'warn');
+        });
+
+        document.getElementById('btn-save').addEventListener('click', async function() {
+            try {
+                var r = await fetch(API + '/session/' + sid + '/save', {
+                    method: 'POST',
+                    headers: {
+                        'X-Session-ID': sid
+                    }
+                });
+                var d = await r.json();
+                logEvent('Saved: ' + d.path, 'good');
+                showAlert('Log saved!');
+            } catch (e) {
+                logEvent('Save error: ' + e.message, 'error');
+            }
+        });
+
+        document.getElementById('btn-shot').addEventListener('click', function() {
+            takeShot();
+        });
+
+        document.getElementById('btn-report').addEventListener('click', async function() {
+            try {
+                var r = await fetch(API + '/session/' + sid + '/report', {
+                    headers: {
+                        'X-Session-ID': sid
+                    }
+                });
+                var d = await r.json();
+                document.getElementById('report-panel').style.display = 'block';
+                document.getElementById('report-pre').textContent = JSON.stringify(d, null, 2);
+                logEvent('Report fetched', 'good');
+            } catch (e) {
+                logEvent('Report error: ' + e.message, 'error');
+            }
+        });
+
+        document.getElementById('btn-recover').addEventListener('click', function() {
+            recoverSession();
+        });
+
+        document.getElementById('btn-clear').addEventListener('click', function() {
+            moodCounts = {};
+            emoHist = [];
+            confHist = [];
+            focusHist = [];
+            posFr = 0;
+            negFr = 0;
+            moodShifts = 0;
+            document.getElementById('sv-pos').textContent = 0;
+            document.getElementById('sv-neg').textContent = 0;
+            document.getElementById('sv-conf').textContent = '—';
+            document.getElementById('hdr-shifts').textContent = 0;
+            document.getElementById('sv-shifts').textContent = 0;
+            document.getElementById('mood-freq').innerHTML = '';
+            document.getElementById('prob-bars').innerHTML = '';
+            document.getElementById('music-hist').innerHTML = '';
+            document.getElementById('advice-box').classList.remove('show');
+            musicLog = [];
+            initHeatmap();
+            logEvent('Analytics cleared', 'warn');
+        });
+
+        document.getElementById('mic-btn').addEventListener('click', function() {
+            if (isRunning) toggleAlwaysOn();
+            else logEvent('Start detection first', 'warn');
+        });
+
+        document.getElementById('btn-send').addEventListener('click', function() {
+            sendText(document.getElementById('stt-input').value);
+        });
+        document.getElementById('stt-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') sendText(e.target.value);
+        });
+
+        /* ════════════ LANGUAGE MODAL ════════════ */
+        var _selectedLang = 'hindi';
+
+        function showLangModal(msg) {
+            var modal = document.getElementById('lang-modal');
+            if (msg) document.getElementById('lang-modal-msg').textContent = msg;
+            modal.style.display = 'flex';
+            // Animate in
+            modal.querySelector('.lang-modal').style.animation = 'none';
+        }
+
+        function hideLangModal() {
+            document.getElementById('lang-modal').style.display = 'none';
+        }
+
+        // Language button selection
+        document.querySelectorAll('.lang-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.lang-btn').forEach(function(b) {
+                    b.classList.remove('selected');
+                });
+                btn.classList.add('selected');
+                _selectedLang = btn.getAttribute('data-lang');
+                document.getElementById('lang-confirm-btn').disabled = false;
+            });
+        });
+
+        // Confirm button
+        document.getElementById('lang-confirm-btn').addEventListener('click', function() {
+            if (!_selectedLang) return;
+            hideLangModal();
+            // Tell server via socket
+            if (socket && socket.connected) {
+                socket.emit('set_language', {
+                    session_id: sid,
+                    lang: _selectedLang
+                });
+            }
+            // Update lang badge
+            updateLangBadge(_selectedLang);
+            // Confirm to Maitri
+            sendText('I prefer ' + _selectedLang + ' music');
+            logEvent('Music language set: ' + _selectedLang, 'good');
+        });
+
+        function updateLangBadge(lang) {
+            var badge = document.getElementById('music-lang-badge');
+            if (!badge) return;
+            var langNames = {
+                hindi: '🇮🇳 Hindi',
+                punjabi: '🎺 Punjabi',
+                tamil: '🎵 Tamil',
+                telugu: '🎶 Telugu',
+                marathi: '🪘 Marathi',
+                bengali: '🎸 Bengali',
+                english: '🌍 English',
+                other: '🎼 Mix'
+            };
+            badge.textContent = langNames[lang] || ('🎵 ' + lang);
+            badge.style.display = 'inline-flex';
+        }
+
+        // Handle language_update from server
+        if (typeof socket !== 'undefined') {} // will be set after connectSocket
+        document.getElementById('btn-exit').addEventListener('click', function() {
+            if (!confirm('Exit MAITRI AI?')) return;
+
+            // Stop detection loop
+            isRunning = false;
+            loopActive = false;
+            alwaysOn = false;
+
+            if (loopTimer) clearTimeout(loopTimer);
+            if (_restartTimer) clearTimeout(_restartTimer);
+            if (_watchdogTimer) clearInterval(_watchdogTimer);
+
+            // Stop speech recognition
+            try {
+                if (speechRecog) speechRecog.abort();
+            } catch (e) {
+                console.warn("Speech recognition error:", e);
+            }
+
+            // ✅ FIX 1: correct variable name is `camStream`, not `cameraStream`
+            if (camStream) {
+                camStream.getTracks().forEach(function(t) {
+                    t.stop();
+                });
+            }
+
+            // Disconnect socket
+            if (socket) {
+                socket.disconnect();
+            }
+
+            // Update UI
+            setMaitriSpeech(
+                "Goodbye! Take care of yourself — I'll always be here whenever you need me. 💛",
+                false
+            );
+            document.getElementById('status-txt').textContent = 'EXITED';
+            document.getElementById('live-dot').className = 'ldot';
+            logEvent('Session ended by user', 'warn');
+
+            // ✅ FIX 2: use a relative path, not a hardcoded Windows filesystem path
+            setTimeout(function() {
+                window.location.href = "../dashboard/dashboard.html"; // ← adjust to your actual relative path
+            }, 3000);
+        });
+
+        // INIT
+        logEvent('Maitri AI v5.0 ready — press START', 'good');
+        document.getElementById('sid-hdr').textContent = 'SID: ' + sid.slice(0, 8);
+    </script>
+</body>
+
+</html>
