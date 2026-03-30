@@ -39,7 +39,12 @@ python app.py
 - Meet Maru 
 
 ## Connect with me
-
+feel free to reach out for questions, collaborations, or just to say hi!
+PlatformLink💼 LinkedInlinkedin.com/in/meetmaru149
+🐙 GitHubgithub.com/ivengexnce
+📸 Instagraminstagram.com/ivengexnce
+🐦 Twitter / Xtwitter.com/ivengexnce
+📧 Emailmeetmaru149@gmail.com
 
 
 ## Event
