@@ -38,7 +38,7 @@
 
 ---
 
-## 🌌 What Is This?
+##  What Is This?
 
 Two deeply human problems. One platform. Built in Bharat. 🇮🇳
 
@@ -73,26 +73,26 @@ Two deeply human problems. One platform. Built in Bharat. 🇮🇳
 
 | # | Problem | Reality Today | Our Answer |
 |---|---------|--------------|------------|
-| 1 | 🌍 **Space Education** | Knowledge across hundreds of scattered sources | **OrbitX** — unified, AI-guided learning hub |
-| 2 | 🤖 **Wellbeing Monitoring** | Tools that log but never respond | **MAITRI** — responds, speaks, and truly cares |
-| 3 | 🗣️ **Language Barrier** | No Indian-language AI wellbeing support | Built-in support for **9 Indian languages** |
-| 4 | 😴 **Fatigue Detection** | Ignored entirely by existing tools | Real-time **eye-blink tracking** + blink-rate analytics |
+| 1 |  **Space Education** | Knowledge across hundreds of scattered sources | **OrbitX** — unified, AI-guided learning hub |
+| 2 |  **Wellbeing Monitoring** | Tools that log but never respond | **MAITRI** — responds, speaks, and truly cares |
+| 3 |  **Language Barrier** | No Indian-language AI wellbeing support | Built-in support for **9 Indian languages** |
+| 4 |  **Fatigue Detection** | Ignored entirely by existing tools | Real-time **eye-blink tracking** + blink-rate analytics |
 
 ---
 
 ## ✨ Features
 
-### 🪐 OrbitX — Space Exploration Platform
+###  OrbitX — Space Exploration Platform
 
 | Feature | Description |
 |---------|-------------|
-| 🪐 **Unified Knowledge** | Planets, missions, telescopes, and space tech — all in one place |
-| 🔐 **Secure Auth** | PHP + bcrypt hashing + SQL injection-safe prepared statements |
-| 📊 **Live Dashboard** | Mission analytics, satellite stats, planet overview, activity feed |
-| 🏆 **Achievements** | Gamified milestones — *First Launch*, *Earth Observer*, *Deep Space Scout* |
-| 📡 **Mission Tracker** | Active, planned, and historic missions with real-time status |
-| 📄 **Reports** | Downloadable scientific reports and archived documents |
-| 🌙 **Dark Mode** | Seamless dark / light theme toggle |
+|  **Unified Knowledge** | Planets, missions, telescopes, and space tech — all in one place |
+|  **Secure Auth** | PHP + bcrypt hashing + SQL injection-safe prepared statements |
+|  **Live Dashboard** | Mission analytics, satellite stats, planet overview, activity feed |
+|  **Achievements** | Gamified milestones — *First Launch*, *Earth Observer*, *Deep Space Scout* |
+|  **Mission Tracker** | Active, planned, and historic missions with real-time status |
+|  **Reports** | Downloadable scientific reports and archived documents |
+|  **Dark Mode** | Seamless dark / light theme toggle |
 
 <br/>
 
@@ -100,18 +100,18 @@ Two deeply human problems. One platform. Built in Bharat. 🇮🇳
 
 | Feature | Description |
 |---------|-------------|
-| 🎭 **Emotion Detection** | 7-class real-time facial emotion via DeepFace + Haar Cascade, 87% accuracy |
-| 😴 **Fatigue Detection** | Eye-blink timer + **blink-rate (BPM)** analytics — Drowsy (3s) → Fatigued (6s) |
-| 📐 **Baseline Calibration** | Motion detector calibrates to each user's natural fidget level (no false alarms) |
-| 🏃 **Behaviour Analysis** | Rolling-average smoothed frame differencing — Calm / Restless / Hyperactive / Inactive |
-| 🗣️ **Voice Response** | Always-on empathetic TTS via pyttsx3 (female voice, 145 WPM) |
-| 🎵 **Music Recommendations** | Emotion-matched songs across 9 Indian languages + YouTube & Spotify links |
-| 🔴 **Alert System** | Severity-graded alerts — INFO / CAUTION / WARNING / CRITICAL — with speak-friendly TTS text |
-| 🛡️ **Echo Guard** | Prevents MAITRI's own voice from being transcribed as user input |
-| 📈 **Session Reports** | `.txt` + `.json` + **`.csv`** logs + **Matplotlib PNG** graph (auto-generated) |
-| 📊 **Wellbeing Score** | 0–100 score derived from emotion distribution across the full session |
-| ⚡ **WebSocket** | Real-time data streaming to frontend — no page refresh needed |
-| 🔄 **Voice Loop** | Continuous listen → transcribe → respond → repeat, with back-off on errors |
+|  **Emotion Detection** | 7-class real-time facial emotion via DeepFace + Haar Cascade, 87% accuracy |
+|  **Fatigue Detection** | Eye-blink timer + **blink-rate (BPM)** analytics — Drowsy (3s) → Fatigued (6s) |
+|  **Baseline Calibration** | Motion detector calibrates to each user's natural fidget level (no false alarms) |
+|  **Behaviour Analysis** | Rolling-average smoothed frame differencing — Calm / Restless / Hyperactive / Inactive |
+|  **Voice Response** | Always-on empathetic TTS via pyttsx3 (female voice, 145 WPM) |
+|  **Music Recommendations** | Emotion-matched songs across 9 Indian languages + YouTube & Spotify links |
+|  **Alert System** | Severity-graded alerts — INFO / CAUTION / WARNING / CRITICAL — with speak-friendly TTS text |
+|  **Echo Guard** | Prevents MAITRI's own voice from being transcribed as user input |
+|  **Session Reports** | `.txt` + `.json` + **`.csv`** logs + **Matplotlib PNG** graph (auto-generated) |
+|  **Wellbeing Score** | 0–100 score derived from emotion distribution across the full session |
+|  **WebSocket** | Real-time data streaming to frontend — no page refresh needed |
+|  **Voice Loop** | Continuous listen → transcribe → respond → repeat, with back-off on errors |
 
 ---
 
@@ -283,15 +283,15 @@ MAITRI detects your language preference from speech or a modal on first launch:
 
 | Language | Example Artists |
 |----------|----------------|
-| 🎵 Hindi / Bollywood | Arijit Singh, A.R. Rahman, Atif Aslam |
-| 🎵 Punjabi / Bhangra | Diljit Dosanjh, Guru Randhawa |
-| 🎵 Tamil / Kollywood | Anirudh Ravichander, Harris Jayaraj |
-| 🎵 Telugu / Tollywood | Sid Sriram, M.M. Keeravani |
-| 🎵 Marathi | Ajay-Atul, Swapnil Bandodkar |
-| 🎵 Bengali / Bangla | Anupam Roy, Rabindranath Tagore |
-| 🎵 Kannada | Santhosh Narayanan |
-| 🎵 Malayalam | Vidyasagar |
-| 🎵 English / International | The Weeknd, Coldplay, ABBA |
+|  Hindi / Bollywood | Arijit Singh, A.R. Rahman, Atif Aslam |
+|  Punjabi / Bhangra | Diljit Dosanjh, Guru Randhawa |
+|  Tamil / Kollywood | Anirudh Ravichander, Harris Jayaraj |
+|  Telugu / Tollywood | Sid Sriram, M.M. Keeravani |
+|  Marathi | Ajay-Atul, Swapnil Bandodkar |
+|  Bengali / Bangla | Anupam Roy, Rabindranath Tagore |
+|  Kannada | Santhosh Narayanan |
+|  Malayalam | Vidyasagar |
+|  English / International | The Weeknd, Coldplay, ABBA |
 
 Every recommendation includes a **YouTube** and **Spotify** deep-link.
 
@@ -301,14 +301,14 @@ Every recommendation includes a **YouTube** and **Spotify** deep-link.
 
 | Metric | Result |
 |--------|--------|
-| 🎭 Emotion Detection Accuracy | **87%** (DeepFace + OpenCV) |
-| ⚡ Detection Latency | **< 450 ms** per frame (hard-timeout guarded) |
-| 🌐 Languages Supported | **9 Indian + English** |
-| 🔒 Security | OWASP Top-10 tested — **0 vulnerabilities** |
-| 🔄 Concurrent Sessions | Multi-session via threading + watchdog |
-| ⏱️ TTS Response Time | **< 1 second** (pyttsx3 daemon thread) |
-| 📈 Session Reports | TXT + JSON + **CSV + PNG graph** auto-generated |
-| 🏃 Motion Calibration | First 8 frames → personal baseline (no false alarms) |
+|  Emotion Detection Accuracy | **87%** (DeepFace + OpenCV) |
+|  Detection Latency | **< 450 ms** per frame (hard-timeout guarded) |
+|  Languages Supported | **9 Indian + English** |
+|  Security | OWASP Top-10 tested — **0 vulnerabilities** |
+|  Concurrent Sessions | Multi-session via threading + watchdog |
+|  TTS Response Time | **< 1 second** (pyttsx3 daemon thread) |
+|  Session Reports | TXT + JSON + **CSV + PNG graph** auto-generated |
+|  Motion Calibration | First 8 frames → personal baseline (no false alarms) |
 
 ---
 
