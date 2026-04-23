@@ -1,5 +1,5 @@
 """
-MAITRI AI v5.0 — Railway-Ready Backend
+MAITRI AI v5.0 — Railway-Ready Backend + Frontend
 """
 
 import os, sys, io, cv2, numpy as np, time, logging, threading, uuid
@@ -7,7 +7,7 @@ from collections import deque, Counter
 from datetime import datetime
 from functools import wraps
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
@@ -21,24 +21,21 @@ from Pys.alert_system    import check_alert
 from Pys.audio_module    import record_audio, speech_to_text
 
 # ── App ───────────────────────────────────────────────────────────────────────
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", static_url_path="/static")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "maitri-v5")
 
 # ── SocketIO ──────────────────────────────────────────────────────────────────
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading",
                     logger=False, engineio_logger=False)
 
-# ── CORS — allow InfinityFree domain ─────────────────────────────────────────
-ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "*")
-CORS(app, resources={r"/*": {"origins": ALLOWED_ORIGIN}})
+# ── CORS ──────────────────────────────────────────────────────────────────────
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout),   # Railway shows stdout logs
-    ],
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 for noisy in ("werkzeug", "engineio", "socketio"):
     logging.getLogger(noisy).setLevel(logging.WARNING)
@@ -340,12 +337,24 @@ def stop_voice_loop(session: dict):
     session["voice_loop_active"] = False
 
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+# ── Frontend route — serves maitri_ai.html ────────────────────────────────────
+@app.route("/app")
+@app.route("/app/")
+def frontend():
+    """Serve the MAITRI frontend from the repo root."""
+    return send_from_directory(".", "maitri_ai.html")
+
+
+# ── API Routes ────────────────────────────────────────────────────────────────
 @app.route("/")
 def home():
     return jsonify({
-        "status": "running", "service": "MAITRI AI", "version": "5.0",
-        "ai_provider": AI_PROVIDER, "time": datetime.utcnow().isoformat(),
+        "status":      "running",
+        "service":     "MAITRI AI",
+        "version":     "5.0",
+        "ai_provider": AI_PROVIDER,
+        "frontend":    "/app",
+        "time":        datetime.utcnow().isoformat(),
     })
 
 
@@ -796,7 +805,7 @@ def on_start_voice(data):
                            "timestamp": datetime.utcnow().isoformat()})
 
 
-# ── Entry point — Railway uses PORT env var ───────────────────────────────────
+# ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     logger.info("MAITRI AI v5.0 starting on port %d — AI: %s", port, AI_PROVIDER)
