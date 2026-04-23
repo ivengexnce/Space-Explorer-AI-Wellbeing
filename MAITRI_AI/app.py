@@ -807,6 +807,6 @@ def on_start_voice(data):
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 8080))
     logger.info("MAITRI AI v5.0 starting on port %d — AI: %s", port, AI_PROVIDER)
     socketio.run(app, host="0.0.0.0", port=port, debug=False)
