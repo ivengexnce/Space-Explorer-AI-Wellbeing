@@ -27,7 +27,7 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "maitri-v5")
 # ── CORS — allow InfinityFree domain ─────────────────────────────────────────
 ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "*")
 CORS(app, resources={r"/*": {"origins": ALLOWED_ORIGIN}})
-socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGIN,
+socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGIN,allow_unsafe_werkzeug=True
                     async_mode="threading", logger=False, engineio_logger=False)
 
 # ── Logging ───────────────────────────────────────────────────────────────────
