@@ -24,10 +24,13 @@ from Pys.audio_module    import record_audio, speech_to_text
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "maitri-v5")
 
+# ── SocketIO ──────────────────────────────────────────────────────────────────
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading",
+                    logger=False, engineio_logger=False)
+
 # ── CORS — allow InfinityFree domain ─────────────────────────────────────────
 ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "*")
 CORS(app, resources={r"/*": {"origins": ALLOWED_ORIGIN}})
-socketio.run(app, host="0.0.0.0", port=port, debug=False, allow_unsafe_werkzeug=True , async_mode="threading", logger=False, engineio_logger=False)
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
