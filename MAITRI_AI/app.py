@@ -12,13 +12,26 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
 from Pys.report          import save_log, build_report_data
-from Pys.voice_output    import speak, is_speaking
 from Pys.vision_module   import detect_face_emotion
 from Pys.fatigue_detector import detect_fatigue
 from Pys.behavior_detector import detect_behavior
 from Pys.ai_responder    import get_response, get_greeting, AI_PROVIDER, set_session_language, detect_language_from_text, LANG_DISPLAY
 from Pys.alert_system    import check_alert
-from Pys.audio_module    import record_audio, speech_to_text
+
+# ── SERVER MODE: disable all local audio/mic/TTS on Railway ──────────────────
+# Set ENABLE_LOCAL_AUDIO=1 in Railway Variables ONLY if you have audio hardware
+IS_SERVER = not bool(os.environ.get("ENABLE_LOCAL_AUDIO", ""))
+
+if IS_SERVER:
+    # Stub out speak / is_speaking / record_audio / speech_to_text
+    def speak(text): logger_stub.debug("speak() suppressed on server: %s", text[:60])
+    def is_speaking(): return False
+    def record_audio(**kwargs): return None
+    def speech_to_text(audio): return ""
+    logger_stub = logging.getLogger("audio_stub")
+else:
+    from Pys.voice_output import speak, is_speaking
+    from Pys.audio_module import record_audio, speech_to_text
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = Flask(__name__, static_folder="static", static_url_path="/static")
@@ -40,6 +53,9 @@ logging.basicConfig(
 for noisy in ("werkzeug", "engineio", "socketio"):
     logging.getLogger(noisy).setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
+
+if IS_SERVER:
+    logger.info("SERVER MODE: local audio/mic/TTS disabled")
 
 # ── Tunable constants ─────────────────────────────────────────────────────────
 WINDOW_SIZE        = 10
@@ -220,7 +236,7 @@ def maitri_respond(session: dict, sid: str, emotion: str,
         "ts": datetime.utcnow().isoformat()
     })
 
-    speak(ai["reply"])
+    speak(ai["reply"])  # no-op on server, works locally
     session["maitri_speaking_until"] = time.time() + max(3.0, len(ai["reply"].split()) / 2.0)
 
     socketio.emit("voice_update", {
@@ -244,6 +260,19 @@ _voice_threads: dict[str, threading.Thread] = {}
 
 
 def continuous_voice_loop(session: dict, sid: str):
+    # On Railway (IS_SERVER=True), mic-based voice loop is disabled.
+    # The frontend sends transcripts via the client_transcript WebSocket event instead.
+    if IS_SERVER:
+        logger.info("[%s] Voice loop skipped (server mode — use client_transcript)", sid)
+        session["voice_loop_active"] = False
+        session["voice_status"] = "client-side"
+        socketio.emit("voice_update", {
+            "voice_status": "client-side",
+            "info": "Send speech via client_transcript WebSocket event",
+            "timestamp": datetime.utcnow().isoformat(),
+        }, room=sid)
+        return
+
     logger.info("[%s] Voice loop started", sid)
     session["voice_loop_active"] = True
     consecutive_errors = 0
@@ -353,6 +382,7 @@ def home():
         "service":     "MAITRI AI",
         "version":     "5.0",
         "ai_provider": AI_PROVIDER,
+        "server_mode": IS_SERVER,
         "frontend":    "/app",
         "time":        datetime.utcnow().isoformat(),
     })
@@ -440,7 +470,7 @@ def analyze():
                 "role": "maitri", "text": greet["reply"],
                 "ts": datetime.utcnow().isoformat()
             })
-            speak(greet["reply"])
+            speak(greet["reply"])  # no-op on server
             socketio.emit("voice_update", {
                 "voice_status": "speaking",
                 "ai_reply":     greet["reply"],
@@ -538,7 +568,7 @@ def voice_start(session_id: str):
     with _ses_lock: ses = sessions.get(session_id)
     if not ses: return jsonify({"error": "Not found"}), 404
     start_voice_loop(ses, session_id)
-    return jsonify({"status": "voice loop started"})
+    return jsonify({"status": "voice loop started", "server_mode": IS_SERVER})
 
 
 @app.route("/session/<session_id>/voice/stop", methods=["POST"])
@@ -648,6 +678,7 @@ def report_full(session_id: str):
 def health():
     return jsonify({
         "status": "ok", "version": "5.0", "ai_provider": AI_PROVIDER,
+        "server_mode": IS_SERVER,
         "active_sessions": sum(1 for s in sessions.values() if s["status"] == "active"),
         "total_sessions": len(sessions),
         "voice_loops_active": sum(1 for s in sessions.values() if s.get("voice_loop_active")),
@@ -704,7 +735,8 @@ def on_join(data):
     sid = data.get("session_id", str(uuid.uuid4()))
     join_room(sid)
     get_or_create(sid)
-    emit("joined", {"session_id": sid, "status": "ok", "ai_provider": AI_PROVIDER})
+    emit("joined", {"session_id": sid, "status": "ok", "ai_provider": AI_PROVIDER,
+                    "server_mode": IS_SERVER})
 
 
 @socketio.on("leave")
@@ -735,7 +767,7 @@ def on_set_language(data):
         f"I love that — it makes everything feel more personal. 🎵"
     )
     ses["ai_reply"] = confirm_msg
-    speak(confirm_msg)
+    speak(confirm_msg)  # no-op on server
     socketio.emit("voice_update", {
         "voice_status": "speaking",
         "ai_reply":     confirm_msg,
@@ -801,12 +833,15 @@ def on_start_voice(data):
     if not sid: return
     ses = get_or_create(sid)
     start_voice_loop(ses, sid)
-    emit("voice_update", {"voice_status": "Listening...",
-                           "timestamp": datetime.utcnow().isoformat()})
+    emit("voice_update", {
+        "voice_status": "client-side" if IS_SERVER else "Listening...",
+        "timestamp": datetime.utcnow().isoformat(),
+    })
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    logger.info("MAITRI AI v5.0 starting on port %d — AI: %s", port, AI_PROVIDER)
+    logger.info("MAITRI AI v5.0 starting on port %d — AI: %s — Server mode: %s",
+                port, AI_PROVIDER, IS_SERVER)
     socketio.run(app, host="0.0.0.0", port=port, debug=False)
